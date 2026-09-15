@@ -1,7 +1,7 @@
 ---
-title: "Writing a great story for data science projects "
+title: "Comparing Random Forest Approaches to Class-Imbalanced Credit Card Fraud Detection "
 subtitle: "This is a Report Template Quarto"
-author: "Student Name (Advisor: Dr. Cohen)"
+author: "Nicholas Pargoff and Andrew Mattson (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
   html:
@@ -34,45 +34,144 @@ Nice report! I am adding this to show updates from RStudio.
 
 ## Introduction
 
-The introduction should:
+Card fraud is becoming more prevalent with the current climate or
+e-commerce and the shifting of the US banking legacy systems over to
+more cloud based real time transactions. This increases the need for a
+more robust way to identify transaction fraud. Randon forest has been
+seen as a way to try to combat this current issue. Research lies in
+trying to find a way to deal with the unbalanced nature of fraudulent
+transactions. Less than 2 percent of all transactions are fraudulent so
+this requires a model that can handle unbalanced data in real time. Most
+research looks at creating models that can handle this. This paper will
+look at the common methods and validate their performance against a
+nonadjusted random forest model. In this paper we are going to test some
+of the common random forest models against the original algorithm to
+test if these different models have a greater accuracy impact.
 
--   Develop a storyline that captures attention and maintains interest.
+## Literature Review
 
--   Your audience is your peers
+In Random Forest Algorithm Overview, Salman et al. (2024) provide an
+in-depth review of the benefits and uses of the random forest model,
+which is a predictive machine learning model. The basis of the model is
+that it creates decision trees from subsets of data. Having more trees
+reduces variance. Important features of RF are that they are highly
+accurate, are rarely overfitted, and can handle data with missing
+values. Although RF has a lot of advantages, a major constraint of the
+tool is its inability to produce results efficiently in real-time due to
+reduced prediction speed after training.
 
--   Clearly state the problem or question you're addressing.
+*Theory of Random Forests* indicates that RF is the most widely adopted
+machine learning tool due to its versatility for handling various
+problems as well as computational efficiency. The mathematical theory of
+RF has lagged even though the tool is highly popular and widely used
+(Scornet & Hooker, 2026). Random forests were initially created to run
+classification and regression tests but have expanded into other
+domains. By altering how the data is reflected in the model, researchers
+have brought RF into other domains like survival analysis and quantile
+regression. Research on quantifying RF output has also increased. The
+central limit theorem and variance of RF are products of the forest’s
+subsampling that give researchers a way of quantifying the uncertainty
+of the model’s output (Scornet & Hooker, 2026).
 
-<!-- -->
+[Impact of an improved random forest-based financial management model on
+the effectiveness of corporate sustainability decisions -
+ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2772941924000310)
 
--   Introduce why it is relevant needs.
+This article gives an example of how they used a random forest model to
+help with sustainability decision making in business and to use it as a
+better early warning sign for a potential financial crisis. They chose
+to use the random forest model due to its low complexity, resistance to
+noise data, and good classification performance while also not
+increasing the computational effort to much. Then they decided how to
+prune the decision trees to be able to reduce the complexity of the
+model. They also took their data and normalized it creating Z scores for
+each data point to make sure each variable would be treated correctly.
+They were able to create the model to have 98.03% accuracy for
+predicting financial crisis for companies.
 
--   Provide an overview of your approach.
+The need for real-time and practical fraud detection systems is
+challenging due to the volume of credit card transactions processed.
+Credit fraud, and fraud in general, can have negative impacts that are
+not limited to financial losses but also include reputational damage
+from negative consumer experience.
 
-Example of writing including citing references:
+A recent study (Borketey, 2024) compared several machine learning models
+including but not limited to Logistic Regression, Linear Discriminant
+Analysis, K-nearest Neighbor, Classification and Regression Trees and
+others to try to find the best model to use for real-time fraud
+detection. Borketey used a data set with significant imbalance (0.17%
+fraudulent transactions). The models were evaluated by using AUC, PRAUC,
+F1, KS, Recall and Precision. The data set used was not a full
+representation of global credit card fraud since it was specific to
+European card issuers. A major limitation is that credit card fraud is
+always evolving and this may result in models becoming less effective
+over time. The study found the Random Forest model was the best
+performing with 71% overall fraud detection.
 
-*This is an introduction to ..... regression, which is a non-parametric
-estimator that estimates the conditional expectation of two variables
-which is random. The goal of a kernel regression is to discover the
-non-linear relationship between two random variables. To discover the
-non-linear relationship, kernel estimator or kernel smoothing is the
-main method to estimate the curve for non-parametric statistics. In
-kernel estimator, weight function is known as kernel function
-[@efr2008]. Cite this paper [@bro2014principal]. The GEE [@wang2014].
-The PCA [@daffertshofer2004pca]*. Topology can be used in machine 
-learning [@adams2021topology]
+With the increasing e-commerce transactions, it is important for
+financial institutions to develop robust fraud detection and with Random
+Forests being a main tool for real-time fraud detection it is important
+to understand its strengths and weaknesses. Xuan et al. (2018) compared
+two random forest variants Random-Tree-Based Random Forest (Random
+Forest I) and Cart-Based Random Forest (Random Forest II).
 
-For Symbolic Regression [@wang2019symbolic] *This is my work and I want
-to add more work...*
+This experiment looked at how the two models performed, the ratio of
+fraudulent to legal transactions, and their performance on a large
+dataset. The experiment used a data set from a Chinese e-commerce
+company that was imbalanced and had 0.27% fraudulent transactions. Due
+to the data imbalance an under-sampling method was used with the
+Cart-Based Random Forest to test the ratio of legal and fraudulent
+transactions. The test found that the 5:1 ratio provided the best
+F-Measure for finding true fraudulent transactions. When this model was
+tested on a large data set (4.7 million legal and 38,000 fraudulent
+transactions) to simulate real world scenarios the model had a 33%
+precision rate. In conclusion, the authors found that RF is good for
+smaller data sets; however, further research will be required for real
+world application.
 
-Cite new paper [@su2012linear]
+Data-set imbalance can be a real concern when it comes to developing
+models to detect credit card fraud since these transactions are very
+small population for processed transactions. Galar et al. (2012) ran a
+series of experiments to provide a taxonomy and running comparisons to
+understand how different models handle class imbalance. They used AUC,
+which provides a single measurement to evaluate the performace of a
+model, compared to accuracy, because it does not distinguish between the
+different classifiers. They used a single tree algorithim (C4.5) as the
+base classifier. The study reviewed 22 ensemble variants across four
+ensemble groups.
 
-Classification of Knee OA was studied here [@guida2021knee]. This is another example of LCA [@weller2020latent]
+The authors  found that the most complex approaches did not always have
+the best performance. The most robust methods were SMOTEBagging,
+RUSBoost, and UnderBagging. They also took into account the complexity
+of the methods and concluded that RUSBoost provided good performance
+despite being the least complex. While all ensembles were tested using
+the C4.5 classifier it is unclear if these results would remain if
+tested against a different base classifier like a Random Forest.
+
+Manual review of fraudulent credit card transaction is arduous and
+impractical in today’s financial climate with e-commerce and
+cross-border payments. Fraudsters’ tactics are constantly changing, and
+this increases the difficulty of identifying and classifying fraudulent
+transactions. Fraudulent transactions are a small subset of all
+processed transactions resulting in a major data imbalance (Aburbeian &
+Ashqar, 2023). The authors used a modified Random Forest that included
+synthetic minority oversampling technique (SMOTE) to train the model.
+The authors provide the dataset as 94,682 transactions with 87,562
+nonfraud (97.7%) and 2,052 (2.3%) fraudulent, causing an inconsistency
+in sample calculations. Through testing they found that accuracy is not
+the best measure of the model and used a confusion matrix, precision,
+recall, F1 score, and Receiver Operating Characteristic (ROC). The
+random forest classifier accurately classified 98% of the transactions.
+They found that using SMOTE and hyperparameters provided the more
+accurate model for addressing the data imbalance with fraudulent
+transactions. This experiment relied heavily on synthetic data so
+performance might not directly translate to real-world application.
 
 ## Methods
 
--   Detail the models or algorithms used.
+- Detail the models or algorithms used.
 
--   Justify your choices based on the problem and data.
+- Justify your choices based on the problem and data.
 
 *The common non-parametric regression model is*
 $Y_i = m(X_i) + \varepsilon_i$*, where* $Y_i$ *can be defined as the sum
@@ -84,26 +183,23 @@ $m(x)$ *can be estimated with the product of* $Y_i$ *average and* $X_i$
 the line through the data points with the help of surrounding data
 points. The estimation formula is printed below [@R-base]:*
 
-$$
-M_n(x) = \sum_{i=1}^{n} W_n (X_i) Y_i  \tag{1}
-$$$W_n(x)$ *is the sum of weights that belongs to all real numbers.
-Weights are positive numbers and small if* $X_i$ *is far from* $x$*.*
+$$M_n(x) = \sum_{i=1}^{n} W_n (X_i) Y_i  \tag{1}$$ $W_n(x)$ *is the sum
+of weights that belongs to all real numbers. Weights are positive
+numbers and small if* $X_i$ *is far from* $x$*.*
 
 *Another equation:*
 
-$$
-y_i = \beta_0 + \beta_1 X_1 +\varepsilon_i
-$$
+$$y_i = \beta_0 + \beta_1 X_1 +\varepsilon_i$$
 
 ## Analysis and Results
 
 ### Data Exploration and Visualization
 
--   Describe your data sources and collection process.
+- Describe your data sources and collection process.
 
--   Present initial findings and insights through visualizations.
+- Present initial findings and insights through visualizations.
 
--   Highlight unexpected patterns or anomalies.
+- Highlight unexpected patterns or anomalies.
 
 A study was conducted to determine how...
 
@@ -142,13 +238,13 @@ ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total))
 
 ### Modeling and Results
 
--   Explain your data preprocessing and cleaning steps.
+- Explain your data preprocessing and cleaning steps.
 
--   Present your key findings in a clear and concise manner.
+- Present your key findings in a clear and concise manner.
 
--   Use visuals to support your claims.
+- Use visuals to support your claims.
 
--   **Tell a story about what the data reveals.**
+- **Tell a story about what the data reveals.**
 
 ```{r}
 
@@ -156,8 +252,14 @@ ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total))
 
 ### Conclusion
 
--   Summarize your key findings.
+- Summarize your key findings.
 
--   Discuss the implications of your results.
+- Discuss the implications of your results.
 
 ## References
+
+Salman, I. A., Kalakech, A., & Steiti, A. (2024). Random Forest
+Algorithm Overview. *Babulonian Journal of Machine Learning*, 69-79.
+
+Scornet, E., & Hooker, G. (2026). Theory of Random Forests. *Annual
+Reivew of Statistics and Its Application*, 99-121.
