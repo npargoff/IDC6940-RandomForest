@@ -1,6 +1,5 @@
 ---
-title: "Comparing Random Forest Approaches to Class-Imbalanced Credit Card Fraud Detection "
-subtitle: "This is a Report Template Quarto"
+title: "Comparing Random Forest Approaches to Class-Imbalanced Credit Card Fraud Detection"
 author: "Nicholas Pargoff and Andrew Mattson (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
@@ -21,151 +20,88 @@ editor:
 Slides: [slides.html](slides.html){target="_blank"} ( Go to `slides.qmd`
 to edit)
 
-::: callout-important
-**Remember:** Your goal is to make your audience understand and care
-about your findings. By crafting a compelling story, you can effectively
-communicate the value of your data science project.
-
-Carefully read this template since it has instructions and tips to
-writing!
-
-Nice report! I am adding this to show updates from RStudio.
-:::
-
 ## Introduction
 
-Card fraud is becoming more prevalent with the current climate or
-e-commerce and the shifting of the US banking legacy systems over to
-more cloud based real time transactions. This increases the need for a
-more robust way to identify transaction fraud. Randon forest has been
-seen as a way to try to combat this current issue. Research lies in
-trying to find a way to deal with the unbalanced nature of fraudulent
-transactions. Less than 2 percent of all transactions are fraudulent so
-this requires a model that can handle unbalanced data in real time. Most
-research looks at creating models that can handle this. This paper will
-look at the common methods and validate their performance against a
-nonadjusted random forest model. In this paper we are going to test some
+Payment fraud is becoming more prevalent with the current climate of
+e-commerce and the development of different payment methods. In July
+2023, the Federal Reserve launched the FedNow Service, which allows
+banks and credit unions of any size to send instant payments at any time
+of day and every day of the year [@frbservices2023fednow]. As
+real-time payment adoption increases, fraud detection models must flag
+suspicious transactions as they happen. This increases the need for more
+robust ways to identify transaction fraud. Random forest is commonly
+used to address this problem. Current research focuses on handling the
+unbalanced nature of fraudulent transactions. In this paper we test some
 of the common random forest models against the original algorithm to
-test if these different models have a greater accuracy impact.
+find which model has greater fraud detection performance.
 
-## Literature Review
+Literature Review                                                                        
 
-In Random Forest Algorithm Overview, Salman et al. (2024) provide an
-in-depth review of the benefits and uses of the random forest model,
-which is a predictive machine learning model. The basis of the model is
-that it creates decision trees from subsets of data. Having more trees
-reduces variance. Important features of RF are that they are highly
-accurate, are rarely overfitted, and can handle data with missing
-values. Although RF has a lot of advantages, a major constraint of the
-tool is its inability to produce results efficiently in real-time due to
-reduced prediction speed after training.
+Random Forest (RF) is a widely adopted machine learning method because
+of its computational efficiency and versatility [@scornet2026theory;
+@salman2024random]. It uses random samples of data to build multiple
+decision trees, and because the trees are not highly correlated the risk
+of overfitting is relatively low [@salman2024random]. RF was initially
+created to run classification and regression tests but has expanded into
+other domains like survival analysis and quantile regression. The
+subsampling structure allows the uncertainty of its predictions to be
+quantified [@scornet2026theory]. RF’s main limitation is prediction
+speed. It can train quickly but can be slow when needed for real-time
+decisions [@salman2024random].
 
-*Theory of Random Forests* indicates that RF is the most widely adopted
-machine learning tool due to its versatility for handling various
-problems as well as computational efficiency. The mathematical theory of
-RF has lagged even though the tool is highly popular and widely used
-(Scornet & Hooker, 2026). Random forests were initially created to run
-classification and regression tests but have expanded into other
-domains. By altering how the data is reflected in the model, researchers
-have brought RF into other domains like survival analysis and quantile
-regression. Research on quantifying RF output has also increased. The
-central limit theorem and variance of RF are products of the forest’s
-subsampling that give researchers a way of quantifying the uncertainty
-of the model’s output (Scornet & Hooker, 2026).
+RF has proven effective for credit card fraud detection [@jebaseeli2020fraud; @borketey2024; @salunke2025fraud]. @borketey2024
+compared it with logistic regression, linear discriminant analysis,
+k-nearest neighbors, and classification trees on a dataset with 0.17%
+fraudulent transactions with RF detecting about 71% of those
+transactions. Some studies used RF that did not adjust for class
+imbalance and the authors judged RF mainly on overall predictions
+[@jebaseeli2020fraud]. RF has limitations like degrading when the
+scale of the dataset increases [@xuan2018random]. Fraud changes over
+time and data collection is different by region making it difficult to
+generalize [@borketey2024].
 
-[Impact of an improved random forest-based financial management model on
-the effectiveness of corporate sustainability decisions -
-ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2772941924000310)
+Using accuracy as a metric is not the best way to measure performance of
+this method when fraudulent transactions are rare. A model can have a
+very high accuracy score while missing most of the fraudulent
+transactions. For this reason, several studies relied on precision,
+recall, F1, and area-under-the-curve measures [@galar2012review;
+@borketey2024; @wijaya2024comparative; @aburbeian2023credit].
 
-This article gives an example of how they used a random forest model to
-help with sustainability decision making in business and to use it as a
-better early warning sign for a potential financial crisis. They chose
-to use the random forest model due to its low complexity, resistance to
-noise data, and good classification performance while also not
-increasing the computational effort to much. Then they decided how to
-prune the decision trees to be able to reduce the complexity of the
-model. They also took their data and normalized it creating Z scores for
-each data point to make sure each variable would be treated correctly.
-They were able to create the model to have 98.03% accuracy for
-predicting financial crisis for companies.
+A common way to deal with data imbalance is to pair RF with SMOTE
+[@bhagat2015enhanced; @aburbeian2023credit; @zhang2024improved]. This
+combination has improved the minority-class detection outside fraud.
+@bhagat2015enhanced applied SMOTE after splitting the multi-class
+problem with One-vs-All and One-vs-One methods and @zhang2024improved combined
+SMOTE with tree pruning and Z-score normalization and reached 98.03%
+accuracy and 100% recall. The results do support the general approach of
+pairing SMOTE with RF; however, this may not directly transfer over to
+fraud detection. SMOTE was found to not always be the most effective
+option. Random oversampling with XGBoost achieved the highest F1-score,
+92.43% and the authors concluded that random oversampling, or
+undersampling with NCR, gave the best results [@wijaya2024comparative].
 
-The need for real-time and practical fraud detection systems is
-challenging due to the volume of credit card transactions processed.
-Credit fraud, and fraud in general, can have negative impacts that are
-not limited to financial losses but also include reputational damage
-from negative consumer experience.
+Some methods change how the ensemble samples the data. @galar2012review reviewed 22 ensemble variants across four families, using a
+single C4.5 decision tree as the base classifier with AUC for
+evaluation. The most complex approaches did not always have the best
+performance. SMOTEBagging, RUSBoost, and UnderBagging were the most
+robust. RUSBoost provided good performance and was the least complex. @gu2022novel proposed that an improper sampling strategy can negatively
+impact model performance, increase complexity, and cause overfitting.
+The study also found that DCI-ISSA-RF, which combines DCI oversampling
+with ISSA hyperparameter optimization, outperformed undersampling, most
+cost-sensitive methods and baseline RF. However, DCI-ISSA-RF ran longer
+on large credit card datasets which relates to the speed concern raised
+by @salman2024random.
 
-A recent study (Borketey, 2024) compared several machine learning models
-including but not limited to Logistic Regression, Linear Discriminant
-Analysis, K-nearest Neighbor, Classification and Regression Trees and
-others to try to find the best model to use for real-time fraud
-detection. Borketey used a data set with significant imbalance (0.17%
-fraudulent transactions). The models were evaluated by using AUC, PRAUC,
-F1, KS, Recall and Precision. The data set used was not a full
-representation of global credit card fraud since it was specific to
-European card issuers. A major limitation is that credit card fraud is
-always evolving and this may result in models becoming less effective
-over time. The study found the Random Forest model was the best
-performing with 71% overall fraud detection.
-
-With the increasing e-commerce transactions, it is important for
-financial institutions to develop robust fraud detection and with Random
-Forests being a main tool for real-time fraud detection it is important
-to understand its strengths and weaknesses. Xuan et al. (2018) compared
-two random forest variants Random-Tree-Based Random Forest (Random
-Forest I) and Cart-Based Random Forest (Random Forest II).
-
-This experiment looked at how the two models performed, the ratio of
-fraudulent to legal transactions, and their performance on a large
-dataset. The experiment used a data set from a Chinese e-commerce
-company that was imbalanced and had 0.27% fraudulent transactions. Due
-to the data imbalance an under-sampling method was used with the
-Cart-Based Random Forest to test the ratio of legal and fraudulent
-transactions. The test found that the 5:1 ratio provided the best
-F-Measure for finding true fraudulent transactions. When this model was
-tested on a large data set (4.7 million legal and 38,000 fraudulent
-transactions) to simulate real world scenarios the model had a 33%
-precision rate. In conclusion, the authors found that RF is good for
-smaller data sets; however, further research will be required for real
-world application.
-
-Data-set imbalance can be a real concern when it comes to developing
-models to detect credit card fraud since these transactions are very
-small population for processed transactions. Galar et al. (2012) ran a
-series of experiments to provide a taxonomy and running comparisons to
-understand how different models handle class imbalance. They used AUC,
-which provides a single measurement to evaluate the performace of a
-model, compared to accuracy, because it does not distinguish between the
-different classifiers. They used a single tree algorithim (C4.5) as the
-base classifier. The study reviewed 22 ensemble variants across four
-ensemble groups.
-
-The authors  found that the most complex approaches did not always have
-the best performance. The most robust methods were SMOTEBagging,
-RUSBoost, and UnderBagging. They also took into account the complexity
-of the methods and concluded that RUSBoost provided good performance
-despite being the least complex. While all ensembles were tested using
-the C4.5 classifier it is unclear if these results would remain if
-tested against a different base classifier like a Random Forest.
-
-Manual review of fraudulent credit card transaction is arduous and
-impractical in today’s financial climate with e-commerce and
-cross-border payments. Fraudsters’ tactics are constantly changing, and
-this increases the difficulty of identifying and classifying fraudulent
-transactions. Fraudulent transactions are a small subset of all
-processed transactions resulting in a major data imbalance (Aburbeian &
-Ashqar, 2023). The authors used a modified Random Forest that included
-synthetic minority oversampling technique (SMOTE) to train the model.
-The authors provide the dataset as 94,682 transactions with 87,562
-nonfraud (97.7%) and 2,052 (2.3%) fraudulent, causing an inconsistency
-in sample calculations. Through testing they found that accuracy is not
-the best measure of the model and used a confusion matrix, precision,
-recall, F1 score, and Receiver Operating Characteristic (ROC). The
-random forest classifier accurately classified 98% of the transactions.
-They found that using SMOTE and hyperparameters provided the more
-accurate model for addressing the data imbalance with fraudulent
-transactions. This experiment relied heavily on synthetic data so
-performance might not directly translate to real-world application.
+These studies find that RF is an acceptable choice for fraud detection.
+They also provide different techniques for handling class imbalance. The
+results are difficult to compare because the studies had significant
+variations like different datasets and performance metrics. Some of the
+studies did not use cross validation [@wijaya2024comparative] while others
+used overall accuracy [@salunke2025fraud] for their results making it
+unclear how each imbalance technique improves RF itself. This study
+attempts to address the previous study variations by using a baseline RF
+and only changing the imbalance treatment. Each approach will be
+evaluated on fraud-class precision, recall, F1, and AUC-PR.
 
 ## Methods
 
@@ -257,9 +193,3 @@ ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total))
 - Discuss the implications of your results.
 
 ## References
-
-Salman, I. A., Kalakech, A., & Steiti, A. (2024). Random Forest
-Algorithm Overview. *Babulonian Journal of Machine Learning*, 69-79.
-
-Scornet, E., & Hooker, G. (2026). Theory of Random Forests. *Annual
-Reivew of Statistics and Its Application*, 99-121.
