@@ -1,5 +1,5 @@
 ---
-title: "Comparing Random Forest Approaches to Class-Imbalanced Credit Card Fraud Detection"
+title: "Comparing Random Forest Approaches to Class-Imbalanced Payment Fraud Detection"
 author: "Nicholas Pargoff and Andrew Mattson (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
@@ -26,16 +26,17 @@ Payment fraud is becoming more prevalent with the current climate of
 e-commerce and the development of different payment methods. In July
 2023, the Federal Reserve launched the FedNow Service, which allows
 banks and credit unions of any size to send instant payments at any time
-of day and every day of the year [@frbservices2023fednow]. As
-real-time payment adoption increases, fraud detection models must flag
-suspicious transactions as they happen. This increases the need for more
-robust ways to identify transaction fraud. Random forest is commonly
-used to address this problem. Current research focuses on handling the
+of day and every day of the year [@frbservices2023fednow]. As real-time
+payment adoption increases, fraud detection models must flag suspicious
+transactions as they happen. This increases the need for more robust
+ways to identify transaction fraud. Random forest is commonly used to
+address this problem. Current research focuses on handling the
 unbalanced nature of fraudulent transactions. In this paper we test some
 of the common random forest models against the original algorithm to
 find which model has greater fraud detection performance.
 
-Literature Review                                                                        
+Literature
+Review                                                                        
 
 Random Forest (RF) is a widely adopted machine learning method because
 of its computational efficiency and versatility [@scornet2026theory;
@@ -49,16 +50,17 @@ quantified [@scornet2026theory]. RF’s main limitation is prediction
 speed. It can train quickly but can be slow when needed for real-time
 decisions [@salman2024random].
 
-RF has proven effective for credit card fraud detection [@jebaseeli2020fraud; @borketey2024; @salunke2025fraud]. @borketey2024
+RF has proven effective for credit card fraud detection
+[@jebaseeli2020fraud; @borketey2024; @salunke2025fraud]. @borketey2024
 compared it with logistic regression, linear discriminant analysis,
 k-nearest neighbors, and classification trees on a dataset with 0.17%
 fraudulent transactions with RF detecting about 71% of those
 transactions. Some studies used RF that did not adjust for class
 imbalance and the authors judged RF mainly on overall predictions
-[@jebaseeli2020fraud]. RF has limitations like degrading when the
-scale of the dataset increases [@xuan2018random]. Fraud changes over
-time and data collection is different by region making it difficult to
-generalize [@borketey2024].
+[@jebaseeli2020fraud]. RF has limitations like degrading when the scale
+of the dataset increases [@xuan2018random]. Fraud changes over time and
+data collection is different by region making it difficult to generalize
+[@borketey2024].
 
 Using accuracy as a metric is not the best way to measure performance of
 this method when fraudulent transactions are rare. A model can have a
@@ -71,23 +73,26 @@ A common way to deal with data imbalance is to pair RF with SMOTE
 [@bhagat2015enhanced; @aburbeian2023credit; @zhang2024improved]. This
 combination has improved the minority-class detection outside fraud.
 @bhagat2015enhanced applied SMOTE after splitting the multi-class
-problem with One-vs-All and One-vs-One methods and @zhang2024improved combined
-SMOTE with tree pruning and Z-score normalization and reached 98.03%
-accuracy and 100% recall. The results do support the general approach of
-pairing SMOTE with RF; however, this may not directly transfer over to
-fraud detection. SMOTE was found to not always be the most effective
-option. Random oversampling with XGBoost achieved the highest F1-score,
-92.43% and the authors concluded that random oversampling, or
-undersampling with NCR, gave the best results [@wijaya2024comparative].
+problem with One-vs-All and One-vs-One methods and @zhang2024improved
+combined SMOTE with tree pruning and Z-score normalization and reached
+98.03% accuracy and 100% recall. The results do support the general
+approach of pairing SMOTE with RF; however, this may not directly
+transfer over to fraud detection. SMOTE was found to not always be the
+most effective option. Random oversampling with XGBoost achieved the
+highest F1-score, 92.43% and the authors concluded that random
+oversampling, or undersampling with NCR, gave the best results
+[@wijaya2024comparative].
 
-Some methods change how the ensemble samples the data. @galar2012review reviewed 22 ensemble variants across four families, using a
-single C4.5 decision tree as the base classifier with AUC for
-evaluation. The most complex approaches did not always have the best
-performance. SMOTEBagging, RUSBoost, and UnderBagging were the most
-robust. RUSBoost provided good performance and was the least complex. @gu2022novel proposed that an improper sampling strategy can negatively
-impact model performance, increase complexity, and cause overfitting.
-The study also found that DCI-ISSA-RF, which combines DCI oversampling
-with ISSA hyperparameter optimization, outperformed undersampling, most
+Some methods change how the ensemble samples the data. @galar2012review
+reviewed 22 ensemble variants across four families, using a single C4.5
+decision tree as the base classifier with AUC for evaluation. The most
+complex approaches did not always have the best performance.
+SMOTEBagging, RUSBoost, and UnderBagging were the most robust. RUSBoost
+provided good performance and was the least complex. @gu2022novel
+proposed that an improper sampling strategy can negatively impact model
+performance, increase complexity, and cause overfitting. The study also
+found that DCI-ISSA-RF, which combines DCI oversampling with ISSA
+hyperparameter optimization, outperformed undersampling, most
 cost-sensitive methods and baseline RF. However, DCI-ISSA-RF ran longer
 on large credit card datasets which relates to the speed concern raised
 by @salman2024random.
@@ -96,12 +101,12 @@ These studies find that RF is an acceptable choice for fraud detection.
 They also provide different techniques for handling class imbalance. The
 results are difficult to compare because the studies had significant
 variations like different datasets and performance metrics. Some of the
-studies did not use cross validation [@wijaya2024comparative] while others
-used overall accuracy [@salunke2025fraud] for their results making it
-unclear how each imbalance technique improves RF itself. This study
-attempts to address the previous study variations by using a baseline RF
-and only changing the imbalance treatment. Each approach will be
-evaluated on fraud-class precision, recall, F1, and AUC-PR.
+studies did not use cross validation [@wijaya2024comparative] while
+others used overall accuracy [@salunke2025fraud] for their results
+making it unclear how each imbalance technique improves RF itself. This
+study attempts to address the previous study variations by using a
+baseline RF and only changing the imbalance treatment. Each approach
+will be evaluated on fraud-class precision, recall, F1, and AUC-PR.
 
 ## Methods
 
@@ -131,21 +136,54 @@ $$y_i = \beta_0 + \beta_1 X_1 +\varepsilon_i$$
 
 ### Data Exploration and Visualization
 
-- Describe your data sources and collection process.
+Our dataset contains 10,000 synthetic financial transactions from August
+2025 to August 2026 with 2,142 unique users. The data was obtained from
+Kaggle [@greatcool2026financial]. Of the 10,000 transactions only 126 or
+1.26% of them are fraudulent. There are no missing values or duplicate
+transactions. The dataset contains 11 variables including the target
+variable “is_fraud”. The 10 other variables are:
 
-- Present initial findings and insights through visualizations.
+Transaction_id: An identification variable that identifies each unique
+transaction
 
-- Highlight unexpected patterns or anomalies.
+Timestamp: A datetime variable that has the time of each transaction
 
-A study was conducted to determine how...
+User_id: this is an identification variable for each user
+
+Account_type: this is a categorical variable that lists the type of
+account that was used in the transaction such as savings or checking
+account
+
+Category: A categorical variable that describes what type of product was
+purchased such as electronics or groceries
+
+Amount: A numeric variable that shows the value of the transaction in US
+dollars
+
+Currency: A category variable that shows what kind of currency was used
+for example USD
+
+Payment_method: A categorical variable that names what was used for the
+payment for example debit card or credit card
+
+Device_type: categorical variable the names the type of machine that was
+used such as a POS machine or ATM
+
+Risk_score: A numeric variable that is between 0 to 100 that represents
+the predicted risk of the transaction with 0 being the lowest risk and
+100 being the highest risk.
+
+Is_fraud: The target variable that determines if a transaction was
+fraudulent or not with a 1 being fraud and 0 representing a non-fraud
+transaction.
 
 ```{r, warning=FALSE, echo=T, message=FALSE}
 # loading packages 
 library(tidyverse)
-library(knitr)
-library(ggthemes)
-library(ggrepel)
-library(dslabs)
+library(gtsummary)
+library(readr)
+library(dplyr)
+library(ggplot2)
 ```
 
 ```{python}
@@ -154,23 +192,95 @@ import pandas as pd
 
 ```{r, warning=FALSE, echo=TRUE}
 # Load Data
-kable(head(murders))
+fraud_df <- read_csv('/Users/nicholaspargoff/Desktop/IDC6940/Random Forest/synthetic_financial_transactions.csv')
+fraud_df <- read_csv("synthetic_financial_transactions.csv") %>%
+  mutate(is_fraud = factor(is_fraud, levels = c(0, 1),
+                           labels = c("Legitimate", "Fraud")))
+##Descriptive Data Table
+tbl1 <- fraud_df %>%
+  select(is_fraud, amount, risk_score, account_type, category,
+         payment_method, device_type) %>%
+  tbl_summary(by = is_fraud,
+              statistic = all_continuous() ~ "{median} ({p25}, {p75})",
+              label = list(amount ~ "Transaction amount (USD)",
+                           risk_score ~ "Risk score",
+                           account_type ~ "Account type",
+                           category ~ "Merchant category",
+                           payment_method ~ "Payment method",
+                           device_type ~ "Device type")) %>%
+  add_overall() %>%
+  add_p() %>%
+  bold_labels()
 
-ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total)) 
+tbl1
+# Numeric copy of the target so summaries work even if is_fraud becomes a factor later
+fraud_data <- fraud_df %>% mutate(fraud_num = as.numeric(is_fraud == "Fraud"))
 
-  ggplot1 + geom_point(aes(col=region), size = 4) +
-  geom_text_repel(aes(label=abb)) +
-  scale_x_log10() +
-  scale_y_log10() +
-  geom_smooth(formula = "y~x", method=lm,se = F)+
-  xlab("Populations in millions (log10 scale)") + 
-  ylab("Total number of murders (log10 scale)") +
-  ggtitle("US Gun Murders in 2010") +
-  scale_color_discrete(name = "Region")+
-      theme_bw()
-  
+# Plot 1: class balance
+fraud_summary <- fraud_data %>%
+  count(fraud_num, name = "count") %>%
+  mutate(percent = count / sum(count) * 100)
+
+ggplot(fraud_summary, aes(x = factor(fraud_num), y = count, fill = factor(fraud_num))) +
+  geom_col(width = 0.5) +
+  geom_text(aes(label = paste0(count, " (", round(percent, 2), "%)")), vjust = -0.5) +
+  scale_x_discrete(labels = c("0" = "Non-Fraud", "1" = "Fraud")) +
+  scale_fill_manual(values = c("0" = "green", "1" = "red")) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Fraudulent vs. Non-Fraudulent Transactions",
+       x = NULL, y = "Count of Transactions") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Plot 2: fraud rate by category
+category_fraud <- fraud_data %>%
+  group_by(category) %>%
+  summarise(total_transactions = n(),
+            fraud_count = sum(fraud_num),
+            fraud_rate = mean(fraud_num) * 100,
+            .groups = "drop")
+
+ggplot(category_fraud, aes(x = reorder(category, fraud_rate), y = fraud_rate, fill = category)) +
+  geom_col() +
+  geom_text(aes(label = paste0(fraud_count, "/", total_transactions)), vjust = -0.5) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Fraud Rate by Category", x = "Category", y = "Fraud Rate (%)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+# Plot 3: fraud rate by payment method
+payment_fraud_pct <- fraud_data %>%
+  group_by(payment_method) %>%
+  summarise(total_transactions = n(),
+            fraud_count = sum(fraud_num),
+            fraud_rate = mean(fraud_num) * 100,
+            .groups = "drop")
+
+ggplot(payment_fraud_pct, aes(x = reorder(payment_method, fraud_rate), y = fraud_rate, fill = payment_method)) +
+  geom_col(width = 0.5) +
+  geom_text(aes(label = paste0(round(fraud_rate, 2), "% (", fraud_count, "/", total_transactions, ")")),
+            vjust = -0.5) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(title = "Fraud Rate by Payment Method", x = "Payment Method", y = "Fraud Rate (%)") +
+  theme_minimal() +
+  theme(legend.position = "none")
 
 ```
+
+Table 1 compares legitimate and fraudulent transactions. Risk score was
+the only variable that had a significant difference between the groups
+with a p-value \<0.001. Transaction amount, account type, merchant
+category, payment method, and device type showed no significant
+difference. Model performance will likely depend on the risk score.
+
+The Fraudulent vs Non-Fraudulent Transactions plot shows the data
+imbalance, with only 1.26% of the 10,000 transactions marked as
+fraudulent. The Fraud Rate by Category and Fraud Rate by Payment Method
+plots indicate that Travel had the highest fraud rate at 1.58% and debit
+card had the highest by payment method at 1.36%; however, the
+differences between the groups are small and were not statistically
+significant per Table 1. The small number of fraud cases in each group
+makes these rates unreliable.
 
 ### Modeling and Results
 
