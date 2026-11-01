@@ -35,14 +35,12 @@ unbalanced nature of fraudulent transactions. In this paper we test some
 of the common random forest models against the original algorithm to
 find which model has greater fraud detection performance.
 
-Literature
-Review                                                                        
+### Literature Review                                                                        
 
 Random Forest (RF) is a widely adopted machine learning method because
 of its computational efficiency and versatility [@scornet2026theory;
-@salman2024random]. It uses random samples of data to build multiple
-decision trees, and because the trees are not highly correlated the risk
-of overfitting is relatively low [@salman2024random]. RF was initially
+@salman2024random]. RF trees are not highly correlated so the risk of
+overfitting is relatively low [@salman2024random]. RF was initially
 created to run classification and regression tests but has expanded into
 other domains like survival analysis and quantile regression. The
 subsampling structure allows the uncertainty of its predictions to be
@@ -110,48 +108,91 @@ will be evaluated on fraud-class precision, recall, F1, and AUC-PR.
 
 ## Methodology
 
+### Random Forest
+
 A Random Forest combines many decision trees to make predictions
 [@scornet2026theory]. Each tree uses a random sample of the training
 data and considers a random subset of features at each split. Combining
 the trees generally produces more reliable predictions and reduces
-overfitting compared with a single decision tree. This will use the
-Kaggle dataset [@greatcool2026financial] with 10,000 synthetic
+overfitting compared with a single decision tree.
+
+Firstly, each tree is trained on a sample pulled from the training data
+with replacement, as a result some observations may be used more than
+once.
+
+$$D_b \sim \text{Bootstrap}(D), \quad b = 1, \dots, B$$
+
+where $D$ is the training data, $D_b$ is the sample for tree $b$, and
+$B$ is the number of trees.
+
+Second, the trees are built and at each split a random subset of
+features is drawn. The best split from those features is used.
+
+Third, predictions are combined. For classification, the forest uses the
+majority vote across trees. The share of trees voting fraud serves as
+the predicted fraud probability.
+
+### Assumptions
+
+Random Forest does not make assumptions about the distribution of the
+data. It does assume that observations are independent and drawn from
+the same distribution. This dataset tests those assumptions in two ways.
+First, the same users appear in both the training and testing data.
+Secondly, the random split ignores the time order of the transactions.
+We assume that the fraud labels are correct and that the synthetic data
+reflect real world fraud patterns.
+
+### Class Imbalance Treatments
+
+Because splits are chosen to reduce overall impurity, a forest trained
+on data with low fraud can perform well overall while missing most fraud
+cases. We compare four ways to handle this data imbalance
+[@galar2012review].
+
+**Baseline.** This trains a random forest without adjusting the data for
+the class imbalance.
+
+**SMOTE.** This method creates synthetic data points for the fraudulent
+transactions. It uses that data to train the random forest model
+[@galar2012review]. In an effort to prevent data leakage, SMOTE is
+applied only to the training data. Data points are generated between a
+fraud case and one of its nearest fraud neighbors:
+
+$$x_{new} = x_i + \lambda \left(x_{zi} - x_i\right), \quad \lambda \sim U(0, 1)$$
+
+where $x_i$ is a fraud case, $x_{zi}$ is one of its $k$ nearest fraud
+neighbors, and $\lambda$ is a random value between 0 and 1
+[@chawla2002smote].
+
+**Balanced Random Forest.** This method trains each tree on a balanced
+sample. The model undersamples the non-fraudulent transactions to match
+the fraudulent transactions. As a result, each tree uses a different
+subset of legitimate transactions.
+
+**Class Weighting.** This method gives fraudulent transactions a greater
+weight when choosing splits.
+
+### Procedure
+
+The data is split 70/30 into training and testing sets, stratified on
+fraud status. All four models use the same settings and only the
+imbalance treatment is changed. Fraud is predicted when the fraud
+probability exceeds 0.5. The model for each condition is then assessed
+once on the testing set.
+
+### Evaluation Metrics
+
+All metrics are calculated for the fraud class. Accuracy is excluded
+because a model can be highly accurate but still miss fraudulent
 transactions.
 
-1.      Create random samples. Draw a training sample for each tree with
-replacement, meaning some observations may appear more than once.
+$$\text{Precision} = \frac{TP}{TP + FP}, \qquad
+\text{Recall} = \frac{TP}{TP + FN}, \qquad
+F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$$
 
-2.      Build the trees. At each split, consider a random subset of
-features and choose the best split from those features.
-
-3.      Combine predictions. For classification, use the majority vote
-across trees.
-
-4.     Evaluate and tune. Use AUC-PR with cross-validation to adjust
-model settings, then assess the final model on the testing set.
-
-We will be comparing four different ways to handle the imbalanced data
-in the random forest model [@galar2012review]. The four models’ data
-will be stratified 70/30 between training and testing data:
-
-·         Baseline: This will train a random forest without adjusting
-the data for the class imbalance.
-
-·         SMOTE: This method creates synthetic data points for the
-fraudulent transactions then uses that data to train the random forest
-model [@galar2012review]. This will be applied to the training data
-within each cross-validation fold. Data points are generated between a
-fraud case and one of its nearest fraud neighbors.
-
-·         Balanced Random Forest: This method will train each tree on a
-balanced sample, meaning the model will under sample the non-fraudulent
-transactions to match the fraudulent transactions. As a result, each
-tree has a different subset of non-fraudulent transactions.
-
-·         Class Weighting: This method will give the minority class
-greater weight so that errors predicting fraudulent transactions will
-penalize the model more, allowing us to train the model without changing
-the number of observations.
+TP is fraud correctly flagged, FP is legitimate transactions wrongly
+flagged, and FN is fraud that was missed [@aburbeian2023credit]. AUC-PR
+is the area under the precision-recall curve across all thresholds.
 
 ## Analysis and Results
 
