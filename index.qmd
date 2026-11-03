@@ -246,6 +246,10 @@ library(gtsummary)
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(ranger)
+library(themis)
+library(PRROC)
+
 ```
 
 ```{python}
@@ -364,16 +368,194 @@ makes these rates unreliable.
 
 ### Modeling and Results
 
-- Explain your data preprocessing and cleaning steps.
+### Data Processing
 
-- Present your key findings in a clear and concise manner.
+This dataset contained 10,000 synthetic transactions with 11 columns and
+no missing values. The data had a severe imbalance of 1.26% fraudulent
+transactions for the population. Transaction_id and User_id were dropped
+from the model to prevent the model from using  them as identifiers for
+fraudulent transactions. Timestamp was dropped since time was not used
+as an indicator in this experiment. Currency was also dropped since all
+transactions are in USD. A total of six predictors were used: four
+categorical (account type, category, payment method, and device type)
+and two numeric (amount and risk score). SMOTE requires numeric inputs
+so the four categorical predictors were converted to 0/1. The four
+models were evaluated using 10 repeated stratified splits 70/30 with
+SMOTE applied only to the training data.
 
-- Use visuals to support your claims.
+### Results
 
-- **Tell a story about what the data reveals.**
-
+Baseline AUC-PR was 0.096, while random guessing resulted in 0.013; the
+models performed better than random guessing. The imbalance methods did
+not improve the model’s ability to separate legitimate and fraudulent
+transactions. Class weighting matched baseline at 0.096, Balanced RF
+scored 0.084 performing very similar to baseline, and SMOTE was the
+least effective at 0.055.
 ```{r}
+#| include: false
+library(ranger)
+library(themis)
+library(PRROC)
 
+model_data <- fraud_df %>%
+  select(-transaction_id, -user_id, -timestamp, -currency) %>%
+  mutate(across(where(is.character), as.factor))
+
+y <- factor(model_data$is_fraud, levels = c("Legitimate", "Fraud"),
+            labels = c("legit", "fraud"))
+
+X <- as.data.frame(model.matrix(~ . - 1, data = select(model_data, -is_fraud)))
+names(X) <- make.names(names(X))
+
+stratified_split <- function(y, p = 0.7) {
+  idx <- unlist(lapply(levels(y), function(l) {
+    i <- which(y == l)
+    sample(i, floor(p * length(i)))
+  }))
+  sort(idx)
+}
+
+evaluate <- function(prob_fraud, truth, threshold = 0.5) {
+  pred <- ifelse(prob_fraud >= threshold, "fraud", "legit")
+  tp <- sum(pred == "fraud" & truth == "fraud")
+  fp <- sum(pred == "fraud" & truth == "legit")
+  fn <- sum(pred == "legit" & truth == "fraud")
+  precision <- if ((tp + fp) == 0) NA else tp / (tp + fp)
+  recall <- tp / (tp + fn)
+  f1 <- if (is.na(precision) || (precision + recall) == 0) 0 else
+    2 * precision * recall / (precision + recall)
+  auc_pr <- pr.curve(scores.class0 = prob_fraud[truth == "fraud"],
+                     scores.class1 = prob_fraud[truth == "legit"])$auc.integral
+  c(precision = precision, recall = recall, f1 = f1, auc_pr = auc_pr)
+}
+
+n_trees <- 500
+methods <- c("Baseline RF", "SMOTE", "Balanced RF", "Class weights")
+
+fit_predict <- function(method, X_tr, y_tr, X_te) {
+  train <- data.frame(X_tr, Class = y_tr)
+  if (method == "SMOTE") {
+    train <- smote(train, var = "Class", k = 5, over_ratio = 1)
+  }
+  n_f <- sum(train$Class == "fraud"); n_l <- sum(train$Class == "legit")
+  args <- list(Class ~ ., data = train, num.trees = n_trees,
+               probability = TRUE, seed = 1)
+  if (method == "Balanced RF") {
+    frac <- n_f / nrow(train)
+    args$sample.fraction <- c(frac, frac)
+    args$replace <- TRUE
+  }
+  if (method == "Class weights") {
+    args$class.weights <- c(1, n_l / n_f)
+  }
+  fit <- do.call(ranger, args)
+  predict(fit, data = X_te)$predictions[, "fraud"]
+}
+##| include: false
+seeds <- 1:10
+results <- list()
+risk_results <- numeric(length(seeds))
+
+for (s in seeds) {
+  set.seed(s)
+  tr <- stratified_split(y)
+  for (m in methods) {
+    p <- fit_predict(m, X[tr, ], y[tr], X[-tr, ])
+    results[[length(results) + 1]] <-
+      c(seed = s, method = m, as.list(evaluate(p, y[-tr])))
+  }
+  rs <- model_data$risk_score[-tr]
+  truth <- y[-tr]
+  risk_results[s] <- pr.curve(scores.class0 = rs[truth == "fraud"],
+                              scores.class1 = rs[truth == "legit"])$auc.integral
+}
+
+res <- bind_rows(lapply(results, as.data.frame))
+res[, c("precision", "recall", "f1", "auc_pr")] <-
+  lapply(res[, c("precision", "recall", "f1", "auc_pr")], as.numeric)
+
+base_auc <- res %>% filter(method == "Baseline RF") %>% arrange(as.numeric(seed)) %>% pull(auc_pr)
+risk_wins <- sum(risk_results > base_auc)
+```
+
+
+```{r tbl-results}
+#| tbl-cap: "Model performance on the fraud class across 10 stratified splits, mean (SD). Precision is undefined when a model predicted no fraud cases. Threshold metrics use a 0.5 cutoff."
+fmt <- function(m, s) ifelse(is.na(m), "Undefined", sprintf("%.3f (%.3f)", m, s))
+
+model_rows <- res %>%
+  group_by(method) %>%
+  summarise(across(c(auc_pr, recall, precision, f1),
+                   list(m = ~mean(.x, na.rm = TRUE), s = ~sd(.x, na.rm = TRUE)))) %>%
+  mutate(method = factor(method, levels = methods)) %>%
+  arrange(method) %>%
+  transmute(Model = as.character(method),
+            `AUC-PR` = fmt(auc_pr_m, auc_pr_s),
+            Recall = fmt(recall_m, recall_s),
+            Precision = fmt(precision_m, precision_s),
+            F1 = fmt(f1_m, f1_s))
+
+reference_rows <- tibble(
+  Model = c("Random guessing", "Risk score only"),
+  `AUC-PR` = c(sprintf("%.3f", mean(y == "fraud")),
+               sprintf("%.3f (%.3f)", mean(risk_results), sd(risk_results))),
+  Recall = "", Precision = "", F1 = ""
+)
+
+knitr::kable(bind_rows(reference_rows, model_rows), align = "lcccc")
+```
+
+The data limited the models’ ability because risk score was the main
+variable that identified the difference between legitimate and
+fraudulent transactions. Risk score alone reached an AUC-PR of 0.116
+compared with 0.096 for baseline RF. It scored higher on 8 out of 10
+splits. While the Random Forest used other variables to help identify
+fraudulent transactions, it is likely those variables added noise to the
+model.
+
+```{r fig-distribution}
+#| fig-cap: "Distribution of each metric across 10 stratified splits by model."
+res %>%
+  pivot_longer(c(auc_pr, recall, precision, f1), names_to = "metric") %>%
+  mutate(method = factor(method, levels = methods),
+         metric = recode(metric, auc_pr = "AUC-PR", recall = "Recall",
+                         precision = "Precision", f1 = "F1")) %>%
+  ggplot(aes(method, value)) +
+  geom_boxplot() +
+  facet_wrap(~metric, scales = "free_y") +
+  labs(x = NULL, y = NULL) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```
+
+Baseline RF assigned every transaction a low probability of fraud
+because there was only 1.26% of fraudulent cases resulting in recall of
+0. The model requires the transactions to have a 50% probability before
+identifying them as fraudulent. Class weighting and baseline precision
+remain undefined due to their inability to identify fraudulent
+transactions. Balanced RF identified about 31% of the fraudulent
+transactions with precision being 3%. However, its ranking did not
+improve with an AUC-PR of 0.084 which is similar to the baseline score
+of 0.096.  The models were limited due to the fraudulent transactions
+being very similar to legitimate transactions.
+
+```{r fig-AUC-PR}
+#| fig-cap: "Precision-recall curves for one stratified split (seed 1). The dashed line is the fraud rate, the expected precision of random guessing."
+set.seed(1)
+tr <- stratified_split(y)
+pr_df <- bind_rows(lapply(methods, function(m) {
+  p <- fit_predict(m, X[tr, ], y[tr], X[-tr, ])
+  pr <- pr.curve(scores.class0 = p[y[-tr] == "fraud"],
+                 scores.class1 = p[y[-tr] == "legit"], curve = TRUE)
+  data.frame(recall = pr$curve[, 1], precision = pr$curve[, 2], method = m)
+}))
+
+ggplot(pr_df, aes(recall, precision, color = method)) +
+  geom_line() +
+  geom_hline(yintercept = mean(y == "fraud"), linetype = "dashed") +
+  labs(x = "Recall", y = "Precision", color = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
 ```
 
 ### Conclusion
