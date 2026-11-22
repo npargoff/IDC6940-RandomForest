@@ -1,7 +1,6 @@
 ---
-title: "Present a great story for data science projects"
-subtitle: "This is a Slide Template"
-author: "Students names (Advisor: Dr. Cohen)"
+title: "Comparing Random Forest Approaches to Class-Imbalanced Payment Fraud Detection"
+author: "Nicholas Pargoff and Andrew Mattson (Advisor: Dr. Cohen)"
 date: '`r Sys.Date()`'
 format:
   revealjs
@@ -16,102 +15,219 @@ editor:
   markdown: 
     wrap: 72
 ---
-
-::: callout-important
-**Remember:** Your goal is to make your audience understand and care
-about your findings. By crafting a compelling story, you can effectively
-communicate the value of your data science project.
-
-Carefully read this template since it has instructions and tips to
-writing!
-
-More information about `revealjs`:
-<https://quarto.org/docs/reference/formats/presentations/revealjs.html>
-:::
-
-## Introduction  {.smaller}
-
--   Develop a storyline that captures attention and maintains interest.
-
--   Your audience is your peers
-
--   Clearly state the problem or question you're addressing.
-
--   Introduce why it is relevant needs.
-
--   Provide an overview of your approach.
-
-In kernel estimator, weight function is known as kernel function
-[@efr2008]. Cite this paper [@bro2014principal]. The GEE [@wang2014].
-The PCA [@daffertshofer2004pca]\*
-
-## Methods
-
--   Detail the models or algorithms used.
-
--   Justify your choices based on the problem and data.
-
-
-
-## Data Exploration and Visualization
-
--   Describe your data sources and collection process.
-
--   Present initial findings and insights through visualizations.
-
--   Highlight unexpected patterns or anomalies.
-
-## Data Exploration and Visualization {.smaller}
-
-A study was conducted to determine how...
-
-```{r, warning=FALSE, echo=F, message=FALSE}
-# loading packages 
-library(tidyverse)
-library(knitr)
-library(ggthemes)
-library(ggrepel)
-library(dslabs)
-```
-
-```{r, warning=FALSE, echo=F}
-# Load Data
-#kable(head(murders))
-
-ggplot1 = murders %>% ggplot(mapping = aes(x=population/10^6, y=total)) 
-
-  ggplot1 + geom_point(aes(col=region), size = 4) +
-  geom_text_repel(aes(label=abb)) +
-  scale_x_log10() +
-  scale_y_log10() +
-  geom_smooth(formula = "y~x", method=lm,se = F)+
-  xlab("Populations in millions (log10 scale)") + 
-  ylab("Total number of murders (log10 scale)") +
-  ggtitle("US Gun Murders in 2010") +
-  scale_color_discrete(name = "Region")+
-      theme_bw()
-  
+```{css}
+#title-slide .title {
+  font-size: 1.6em;
+}
 
 ```
-
-## Modeling and Results
-
--   Explain your data preprocessing and cleaning steps.
-
--   Present your key findings in a clear and concise manner.
-
--   Use visuals to support your claims.
-
--   **Tell a story about what the data reveals.**
 
 ```{r}
+library(tidyverse)
+  
+fraud_df <- read_csv("synthetic_financial_transactions.csv") %>% 
+  mutate(is_fraud = factor(is_fraud, levels = c(0,1), 
+                          labels = c("Legitimate", "Fraud")))
+
+fraud_data<- fraud_df %>% mutate(fraud_num = as.numeric(is_fraud == "Fraud"))
+```
+
+
+## Introduction  
+
+-   Payment fraud is increasing with growing e-commerce and new payment methods.
+-   FedNow (July 2023): offers financial institutions to send and receive instant payments any time and every day.
+-   As realtime payments increase, fraud models must flag transactions as they happen.
+
+::: notes
+System threshold is important because a low threshold flags to many legitimate transactions. These transactions are then manually verified and a majority are confirmed valid. These flag decrease the team urgency to review them due to false positives. Now fraudulent transactions can pass through due to the decrease in urgency. This also increases cost the institution because of increased manual hours to work these requests, increased losses in fraud, and then reputation damage. That is why it is important to develop a model that is precise.  
+:::
+
+## Literature Review
+
+-   Accuracy is not used as a measurement metric.
+-   Studies use precision, recall, F1, and AUC-PR instead.
+-   RF has been proven effective for credit card fraud.
+-   Pairing RF and SMOTE is common but not always the best option.
+-   Studies use different datasets and metrics resulting in studies that are hard to compare.
+
+::: notes
+This study only changed the treatment but kept the models the same
+:::
+
+## Methodology: Random Forest
+
+-   Each tree trains on a bootstrap sample of the training data.
+    $$D_b \sim \text{Bootstrap}(D), \quad b = 1, \dots, B$$
+-   A random subset of features used for each split.
+-   Assumptions: Observations are independent, but same users appear in training and testing data, and the folds are time order.
+
+## Methodology: Class Imbalance Treatments
+-   Baseline - no adjustment for imbalance.
+-   SMOTE-NC - creates synthetic fraud cases from a fraud case and its nearest fraud neighbors.
+-   Balanced RF - each tree trains on a balanced sample by undersmapling legitimate transactions.
+-   Class weighting - fraud cases get more weight when choosing splits. 
+
+::: notes
+SMOTE-NC handles both numeric and categorical variables. For categories it uses the most common category among the neighbors.
+:::
+
+## Methodology: Procedure
+-   5-fold cross validation for 10 repeats (50 test folds).
+-   All four models used the same folds and 500 trees (randomForest package).
+-   Everything was run with and without the risk score.
 
 ```
+10,000 transactions
+├── Test fold (20%): grades the model
+└── Training (80%)
+    ├── 75%: trains the model (SMOTE-NC applied here only)
+    └── 25%: picks the threshold with the best F1
+```
+
+::: notes 
+A 0.5 threshold was not used due to its inablity to identify fraud because of the imbalance.
+:::
+
+## Methodology; Metrics
+
+-   All metrics are for the fraud class
+-   AUC-PR - area under the precision-recall curve for all thresholds
+-   Random guessing gives AUC-PR of about 0.013, the fraud rate
+
+$$\text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}, \quad F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$$
+
+
+
+## Data Exploration and Visualizations 
+:::: {.columns}
+::: {.column width="45%"}
+- 10,000 synthetic transactions, August 2025 to August 2026 (Kaggle, greatcool 2026)
+- 2,142 users, no missing values
+- 126 fraud (1.26%)
+- 6 predictors: account type, category, payment method, device type, amount, risk score
+:::
+
+::: {.column width="55%"}
+```{r}
+#| fig-height: 5
+fraud_summary <- fraud_data %>%
+  count(fraud_num, name = "count") %>%
+  mutate(percent = count / sum(count) * 100)
+
+ggplot(fraud_summary, aes(x = factor(fraud_num), y = count, fill = factor(fraud_num))) +
+  geom_col(width = 0.5) +
+  geom_text(aes(label = paste0(count, " (", round(percent, 2), "%)")), vjust = -0.5) +
+  scale_x_discrete(labels = c("0" = "Legitimate", "1" = "Fraud")) +
+  scale_fill_manual(values = c("0" = "gray60", "1" = "firebrick")) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.1))) +
+  labs(x = NULL, y = "Count of Transactions") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+:::
+::::
+
+::: notes
+Andrew. Transaction ID and user ID were dropped so the models could not use them.
+:::
+
+## Data Exploration and Visualization (continued)
+
+:::: {.columns}
+::: {.column width="45%"}
+- Risk score was the only variable that differed between fraud and legitimate transactions (p < 0.001)
+- Median risk score: 33 for fraud, 27 for legitimate
+- Its calculation is undocumented, so it may cause data leakage
+:::
+
+::: {.column width="55%"}
+```{r}
+#| fig-height: 5
+fraud_df %>%
+  ggplot(aes(risk_score, fill = is_fraud)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("Legitimate" = "gray60", "Fraud" = "firebrick")) +
+  labs(x = "Risk score", y = "Density", fill = NULL) +
+  theme_minimal() +
+  theme(legend.position = "top")
+```
+:::
+::::
+
+::: notes
+Amount, account type, category, payment method, and device type showed no significant difference.
+:::
+
+## Results: Risk Score Included
+
+```{r}
+read.csv("cv_results_with_risk.csv") %>%
+  group_by(method) %>%
+  summarise(AUC_PR    = mean(aucpr),
+            Precision = mean(precision, na.rm = TRUE),
+            Recall    = mean(recall),
+            F1        = mean(f1)) %>%
+  mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
+  knitr::kable(digits = 3)
+```
+
+- Balanced RF (0.089) and Baseline (0.084) performed about the same
+- SMOTE-NC (0.020) was barely above random guessing (0.013)
+
+::: notes
+Averages across 50 test folds.
+:::
+
+## Results: False Alarms
+
+```{r}
+read.csv("cv_results_with_risk.csv") %>%
+  group_by(method) %>%
+  summarise(Caught       = sum(tp) / 10,
+            Missed       = sum(fn) / 10,
+            False_alarms = sum(fp) / 10) %>%
+  mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
+  knitr::kable(digits = 0)
+```
+
+- SMOTE-NC caught 14 fraud cases with 678 false alarms
+- Baseline caught 23 with 88 false alarms, about 8 times fewer
+
+::: notes
+One pass of the data, averaged over 10 repeats, with the risk score included.
+:::
+
+## Results: Risk Score Removed
+
+```{r}
+read.csv("cv_results_no_risk.csv") %>%
+  group_by(method) %>%
+  summarise(AUC_PR    = mean(aucpr),
+            Precision = mean(precision, na.rm = TRUE),
+            Recall    = mean(recall),
+            F1        = mean(f1)) %>%
+  mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
+  knitr::kable(digits = 3)
+```
+
+- All four models' AUC-PR and F1 dropped
+- AUC-PR of 0.013 to 0.018 is about the same as random guessing
+- The models relied on the risk score
+
+::: notes
+SMOTE-NC's recall went up, but its AUC-PR and F1 still dropped.
+:::
 
 ## Conclusion
 
--   Summarize your key findings.
+- Balanced RF and Baseline had the highest AUC-PR, and no treatment clearly beat Baseline
+- SMOTE-NC produced about 8 times as many false alarms as Baseline
+- Selecting the threshold was important
+- **Limitations:** undocumented risk score, about 25 fraud cases per test fold, synthetic data
 
--   Discuss the implications of your results.
+::: notes
+The risk score was the main signal in this data.
+:::
 
-## References
+## Questions?
