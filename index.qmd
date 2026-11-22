@@ -35,7 +35,7 @@ unbalanced nature of fraudulent transactions. In this paper we test some
 of the common random forest models against the original algorithm to
 find which model has greater fraud detection performance.
 
-### Literature Review                                                                        
+### Literature Review
 
 Random Forest (RF) is a widely adopted machine learning method because
 of its computational efficiency and versatility [@scornet2026theory;
@@ -138,7 +138,7 @@ Random Forest does not make assumptions about the distribution of the
 data. It does assume that observations are independent and drawn from
 the same distribution. This dataset tests those assumptions in two ways.
 First, the same users appear in both the training and testing data.
-Secondly, the random split ignores the time order of the transactions.
+Secondly, cross-validation folds ignore the time order of the transactions.
 We assume that the fraud labels are correct and that the synthetic data
 reflect real world fraud patterns.
 
@@ -152,17 +152,15 @@ cases. We compare four ways to handle this data imbalance
 **Baseline.** This trains a random forest without adjusting the data for
 the class imbalance.
 
-**SMOTE.** This method creates synthetic data points for the fraudulent
-transactions. It uses that data to train the random forest model
-[@galar2012review]. In an effort to prevent data leakage, SMOTE is
-applied only to the training data. Data points are generated between a
-fraud case and one of its nearest fraud neighbors:
+**SMOTE-NC.** This method creates synthetic data points for the fraudulent
+transactions using both numerical and categorical data. It uses that data to train the random forest model
+[@galar2012review]. In an effort to prevent data leakage, SMOTE-NC is
+applied only to the training folds. Data points are generated between a fraud case and one of its nearest fraud neighbors: 
 
 $$x_{new} = x_i + \lambda \left(x_{zi} - x_i\right), \quad \lambda \sim U(0, 1)$$
-
 where $x_i$ is a fraud case, $x_{zi}$ is one of its $k$ nearest fraud
 neighbors, and $\lambda$ is a random value between 0 and 1
-[@chawla2002smote].
+[@chawla2002smote]. SMOTE-NC uses the most common category among neighbors.
 
 **Balanced Random Forest.** This method trains each tree on a balanced
 sample. The model undersamples the non-fraudulent transactions to match
@@ -174,11 +172,10 @@ weight when choosing splits.
 
 ### Procedure
 
-The data is split 70/30 into training and testing sets, stratified on
-fraud status. All four models use the same settings and only the
-imbalance treatment is changed. Fraud is predicted when the fraud
-probability exceeds 0.5. The model for each condition is then assessed
-once on the testing set.
+The models were evaluated using a stratified 5-fold cross-validation for 10 repeats. Each fold was trained on 80% of the data and tested on 20%. All four models used the same folds, so the differences in performance reflect the imbalance treatment and not the data split. Each model used the randomForest package with the default of 500 trees. 
+
+A fixed threshold of 0.5 was not used because with the low fraud rate the models would rarely identify fraudulent transactions. The models were trained on 75% of each training set and the other 25% was used to choose the threshold. The threshold that maximized F1 on the 25% was then applied to the test fold. SMOTE-NC was applied only to the 75% used for training. The procedure was run twice, once with the risk score and then without the risk score to test the models' dependence on a single variable. 
+
 
 ### Evaluation Metrics
 
@@ -222,18 +219,18 @@ purchased such as electronics or groceries
 Amount: A numeric variable that shows the value of the transaction in US
 dollars
 
-Currency: A category variable that shows what kind of currency was used
+Currency: A categorical variable that shows what kind of currency was used
 for example USD
 
 Payment_method: A categorical variable that names what was used for the
 payment for example debit card or credit card
 
-Device_type: categorical variable the names the type of machine that was
+Device_type: categorical variable that names the type of machine that was
 used such as a POS machine or ATM
 
-Risk_score: A numeric variable that is between 0 to 100 that represents
+Risk_score: A numeric variable that is from 0 to 100 that represents
 the predicted risk of the transaction with 0 being the lowest risk and
-100 being the highest risk.
+100 being the highest risk. The calculation method is undocumented for this dataset. It is unknown if the risk score was calculated using the fraud label. This raises a potential data leakage concern. 
 
 Is_fraud: The target variable that determines if a transaction was
 fraudulent or not with a 1 being fraud and 0 representing a non-fraud
@@ -246,7 +243,6 @@ library(gtsummary)
 library(readr)
 library(dplyr)
 library(ggplot2)
-library(ranger)
 library(themis)
 library(PRROC)
 
@@ -257,6 +253,8 @@ import pandas as pd
 ```
 
 ```{r load-data, warning=FALSE, message=FALSE}
+#| label: fig-class-dist
+#| fig-cap: "Class distribution of legitimate and fraudulent transactions"
 # Load data
 fraud_df <- read_csv("synthetic_financial_transactions.csv") %>%
   mutate(is_fraud = factor(is_fraud, levels = c(0, 1),
@@ -280,9 +278,10 @@ ggplot(fraud_summary, aes(x = factor(fraud_num), y = count, fill = factor(fraud_
   theme(legend.position = "none")
 ```
 
-*Figure 1. Class distribution of legitimate and fraudulent transactions*
+```{r}
+#| label: tbl-descriptive
+#| tbl-cap: "Descriptive statistics by transaction class"
 
-```{r descriptive-table}
 fraud_df %>%
   select(is_fraud, amount, risk_score, account_type, category,
          payment_method, device_type) %>%
@@ -296,8 +295,12 @@ fraud_df %>%
                            device_type ~ "Device type")) %>%
   add_overall() %>%
   add_p() %>%
-  bold_labels() %>%
-  modify_caption("**Table 1.** Descriptive statistics by transaction class")
+  bold_labels()
+```
+
+```{r}
+#| label: fig-risk-score
+#| fig-cap: "Risk score distribution by transaction class"
 
 fraud_df %>%
   ggplot(aes(risk_score, fill = is_fraud)) +
@@ -308,9 +311,9 @@ fraud_df %>%
   theme(legend.position = "top")
 ```
 
-*Figure 2. Risk score distribution by transaction class*
-
-```{r fig-category-fraud}
+```{r}
+#| label: fig-category-fraud
+#| fig-cap: "Fraud rate by transaction category"
 # Plot 2: fraud rate by category
 category_fraud <- fraud_data %>%
   group_by(category) %>%
@@ -328,9 +331,9 @@ ggplot(category_fraud, aes(x = reorder(category, fraud_rate), y = fraud_rate, fi
   theme(legend.position = "none")
 ```
 
-*Figure 3. Fraud rate by transaction category*
-
-```{r fig-payment-fraud}
+```{r}
+#| label: fig-payment-method-fraud
+#| fig-cap: "Fraud rate by payment method"
 # Plot 3: fraud rate by payment method
 payment_fraud_pct <- fraud_data %>%
   group_by(payment_method) %>%
@@ -348,8 +351,6 @@ ggplot(payment_fraud_pct, aes(x = reorder(payment_method, fraud_rate), y = fraud
   theme_minimal() +
   theme(legend.position = "none")
 ```
-
-*Figure 4. Fraud rate by payment method*
 
 Table 1 compares legitimate and fraudulent transactions. Risk score was
 the only variable that had a significant difference between the groups
@@ -373,195 +374,67 @@ makes these rates unreliable.
 This dataset contained 10,000 synthetic transactions with 11 columns and
 no missing values. The data had a severe imbalance of 1.26% fraudulent
 transactions for the population. Transaction_id and User_id were dropped
-from the model to prevent the model from using  them as identifiers for
+from the model to prevent the model from using them as identifiers for
 fraudulent transactions. Timestamp was dropped since time was not used
 as an indicator in this experiment. Currency was also dropped since all
 transactions are in USD. A total of six predictors were used: four
 categorical (account type, category, payment method, and device type)
-and two numeric (amount and risk score). SMOTE requires numeric inputs
-so the four categorical predictors were converted to 0/1. The four
-models were evaluated using 10 repeated stratified splits 70/30 with
-SMOTE applied only to the training data.
+and two numeric (amount and risk score). 
 
 ### Results
 
-Baseline AUC-PR was 0.096, while random guessing resulted in 0.013; the
-models performed better than random guessing. The imbalance methods did
-not improve the model’s ability to separate legitimate and fraudulent
-transactions. Class weighting matched baseline at 0.096, Balanced RF
-scored 0.084 performing very similar to baseline, and SMOTE was the
-least effective at 0.055.
 ```{r}
-#| include: false
-library(ranger)
-library(themis)
-library(PRROC)
-
-model_data <- fraud_df %>%
-  select(-transaction_id, -user_id, -timestamp, -currency) %>%
-  mutate(across(where(is.character), as.factor))
-
-y <- factor(model_data$is_fraud, levels = c("Legitimate", "Fraud"),
-            labels = c("legit", "fraud"))
-
-X <- as.data.frame(model.matrix(~ . - 1, data = select(model_data, -is_fraud)))
-names(X) <- make.names(names(X))
-
-stratified_split <- function(y, p = 0.7) {
-  idx <- unlist(lapply(levels(y), function(l) {
-    i <- which(y == l)
-    sample(i, floor(p * length(i)))
-  }))
-  sort(idx)
-}
-
-evaluate <- function(prob_fraud, truth, threshold = 0.5) {
-  pred <- ifelse(prob_fraud >= threshold, "fraud", "legit")
-  tp <- sum(pred == "fraud" & truth == "fraud")
-  fp <- sum(pred == "fraud" & truth == "legit")
-  fn <- sum(pred == "legit" & truth == "fraud")
-  precision <- if ((tp + fp) == 0) NA else tp / (tp + fp)
-  recall <- tp / (tp + fn)
-  f1 <- if (is.na(precision) || (precision + recall) == 0) 0 else
-    2 * precision * recall / (precision + recall)
-  auc_pr <- pr.curve(scores.class0 = prob_fraud[truth == "fraud"],
-                     scores.class1 = prob_fraud[truth == "legit"])$auc.integral
-  c(precision = precision, recall = recall, f1 = f1, auc_pr = auc_pr)
-}
-
-n_trees <- 500
-methods <- c("Baseline RF", "SMOTE", "Balanced RF", "Class weights")
-
-fit_predict <- function(method, X_tr, y_tr, X_te) {
-  train <- data.frame(X_tr, Class = y_tr)
-  if (method == "SMOTE") {
-    train <- smote(train, var = "Class", k = 5, over_ratio = 1)
-  }
-  n_f <- sum(train$Class == "fraud"); n_l <- sum(train$Class == "legit")
-  args <- list(Class ~ ., data = train, num.trees = n_trees,
-               probability = TRUE, seed = 1)
-  if (method == "Balanced RF") {
-    frac <- n_f / nrow(train)
-    args$sample.fraction <- c(frac, frac)
-    args$replace <- TRUE
-  }
-  if (method == "Class weights") {
-    args$class.weights <- c(1, n_l / n_f)
-  }
-  fit <- do.call(ranger, args)
-  predict(fit, data = X_te)$predictions[, "fraud"]
-}
-##| include: false
-seeds <- 1:10
-results <- list()
-risk_results <- numeric(length(seeds))
-
-for (s in seeds) {
-  set.seed(s)
-  tr <- stratified_split(y)
-  for (m in methods) {
-    p <- fit_predict(m, X[tr, ], y[tr], X[-tr, ])
-    results[[length(results) + 1]] <-
-      c(seed = s, method = m, as.list(evaluate(p, y[-tr])))
-  }
-  rs <- model_data$risk_score[-tr]
-  truth <- y[-tr]
-  risk_results[s] <- pr.curve(scores.class0 = rs[truth == "fraud"],
-                              scores.class1 = rs[truth == "legit"])$auc.integral
-}
-
-res <- bind_rows(lapply(results, as.data.frame))
-res[, c("precision", "recall", "f1", "auc_pr")] <-
-  lapply(res[, c("precision", "recall", "f1", "auc_pr")], as.numeric)
-
-base_auc <- res %>% filter(method == "Baseline RF") %>% arrange(as.numeric(seed)) %>% pull(auc_pr)
-risk_wins <- sum(risk_results > base_auc)
-```
-
-
-```{r tbl-results}
-#| tbl-cap: "Model performance on the fraud class across 10 stratified splits, mean (SD). Precision is undefined when a model predicted no fraud cases. Threshold metrics use a 0.5 cutoff."
-fmt <- function(m, s) ifelse(is.na(m), "Undefined", sprintf("%.3f (%.3f)", m, s))
-
-model_rows <- res %>%
+#| label: tbl-results
+#| tbl-cap: "Average performance on the fraud class across 50 test folds, risk score included"
+read.csv("cv_results_with_risk.csv") %>%
   group_by(method) %>%
-  summarise(across(c(auc_pr, recall, precision, f1),
-                   list(m = ~mean(.x, na.rm = TRUE), s = ~sd(.x, na.rm = TRUE)))) %>%
-  mutate(method = factor(method, levels = methods)) %>%
-  arrange(method) %>%
-  transmute(Model = as.character(method),
-            `AUC-PR` = fmt(auc_pr_m, auc_pr_s),
-            Recall = fmt(recall_m, recall_s),
-            Precision = fmt(precision_m, precision_s),
-            F1 = fmt(f1_m, f1_s))
-
-reference_rows <- tibble(
-  Model = c("Random guessing", "Risk score only"),
-  `AUC-PR` = c(sprintf("%.3f", mean(y == "fraud")),
-               sprintf("%.3f (%.3f)", mean(risk_results), sd(risk_results))),
-  Recall = "", Precision = "", F1 = ""
-)
-
-knitr::kable(bind_rows(reference_rows, model_rows), align = "lcccc")
+  summarise(AUC_PR    = mean(aucpr),
+            Precision = mean(precision, na.rm = TRUE),
+            Recall    = mean(recall),
+            F1        = mean(f1)) %>%
+    mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
+  knitr::kable(digits = 3)
 ```
 
-The data limited the models’ ability because risk score was the main
-variable that identified the difference between legitimate and
-fraudulent transactions. Risk score alone reached an AUC-PR of 0.116
-compared with 0.096 for baseline RF. It scored higher on 8 out of 10
-splits. While the Random Forest used other variables to help identify
-fraudulent transactions, it is likely those variables added noise to the
-model.
+In @tbl-results Balanced RF and Baseline RF performed about the same having the higher AUC-PR when compared to SMOTE-NC and weighted RF. SMOTE-NC had the lowest AUC-PR barely above random guessing of 0.013. 
 
-```{r fig-distribution}
-#| fig-cap: "Distribution of each metric across 10 stratified splits by model."
-res %>%
-  pivot_longer(c(auc_pr, recall, precision, f1), names_to = "metric") %>%
-  mutate(method = factor(method, levels = methods),
-         metric = recode(metric, auc_pr = "AUC-PR", recall = "Recall",
-                         precision = "Precision", f1 = "F1")) %>%
-  ggplot(aes(method, value)) +
-  geom_boxplot() +
-  facet_wrap(~metric, scales = "free_y") +
-  labs(x = NULL, y = NULL) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1))
+```{r}
+#| label: tbl-catches
+#| tbl-cap: "Fraud caught and false alarms in one pass of the data (126 fraud, 9,874 legitimate), averaged over 10 repeats, risk score included"
+read.csv("cv_results_with_risk.csv") %>%
+  group_by(method) %>%
+  summarise(Caught       = sum(tp) / 10,
+            Missed       = sum(fn) / 10,
+            False_alarms = sum(fp) / 10) %>%
+    mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
+  knitr::kable(digits = 0)
 ```
 
-Baseline RF assigned every transaction a low probability of fraud
-because there was only 1.26% of fraudulent cases resulting in recall of
-0. The model requires the transactions to have a 50% probability before
-identifying them as fraudulent. Class weighting and baseline precision
-remain undefined due to their inability to identify fraudulent
-transactions. Balanced RF identified about 31% of the fraudulent
-transactions with precision being 3%. However, its ranking did not
-improve with an AUC-PR of 0.084 which is similar to the baseline score
-of 0.096.  The models were limited due to the fraudulent transactions
-being very similar to legitimate transactions.
+In @tbl-catches Balanced RF and Baseline RF captured the most fraudulent transactions with the fewest false positives. SMOTE-NC caught less fraud and produced 678 false positives. None of the treatments clearly surpassed baseline. 
 
-```{r fig-AUC-PR}
-#| fig-cap: "Precision-recall curves for one stratified split (seed 1). The dashed line is the fraud rate, the expected precision of random guessing."
-set.seed(1)
-tr <- stratified_split(y)
-pr_df <- bind_rows(lapply(methods, function(m) {
-  p <- fit_predict(m, X[tr, ], y[tr], X[-tr, ])
-  pr <- pr.curve(scores.class0 = p[y[-tr] == "fraud"],
-                 scores.class1 = p[y[-tr] == "legit"], curve = TRUE)
-  data.frame(recall = pr$curve[, 1], precision = pr$curve[, 2], method = m)
-}))
 
-ggplot(pr_df, aes(recall, precision, color = method)) +
-  geom_line() +
-  geom_hline(yintercept = mean(y == "fraud"), linetype = "dashed") +
-  labs(x = "Recall", y = "Precision", color = NULL) +
-  theme_minimal() +
-  theme(legend.position = "top")
+```{r}
+#| label: tbl-norisk
+#| tbl-cap: "Average performance on the fraud class across 50 test folds, risk score removed"
+read.csv("cv_results_no_risk.csv") %>%
+  group_by(method) %>%
+  summarise(AUC_PR    = mean(aucpr),
+            Precision = mean(precision, na.rm = TRUE),
+            Recall    = mean(recall),
+            F1        = mean(f1)) %>%
+    mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
+  knitr::kable(digits = 3)
 ```
+
+@tbl-norisk indicates all four models' AUC-PR and F1 decreased when the risk score was removed. SMOTE-NC's recall increased when the risk score was dropped. AUC-PR is about the same as random guessing. The models relied on the risk score to interpret fraudulent versus legitimate transactions.
+
 
 ### Conclusion
 
-- Summarize your key findings.
+This study compared different Random Forest models for fraud detection with a dataset that contained 1.26% fraudulent transactions. Balanced RF and Baseline RF had the highest AUC-PR of 0.089 and 0.084 respectively. SMOTE-NC had the lowest AUC-PR with the risk score; however, when the risk score was removed SMOTE-NC had the highest recall. The AUC-PR for all models barely surpassed random guessing without the risk score. 
 
-- Discuss the implications of your results.
+Selecting an appropriate threshold was important for model performance. A regular Random Forest with a good cutoff was as good as some of the more complex models. In this particular comparison adding a treatment resulted in SMOTE-NC performing worse than Baseline. This resulted in SMOTE-NC having about 8 times as many false positives in this case resulting in a significant number of legitimate transactions being flagged as fraudulent. Data is the limiting factor when it comes to a model's performance and with this particular review the risk score was the primary indicator of a fraudulent transaction. 
+
+The models depended on the derived risk score as a primary means to identify fraudulent transactions and this particular dataset did not document how that score was derived possibly causing data leakage. The dataset had a significant imbalance with 126 fraudulent transactions making the sample about 25 fraudulent transactions per test fold. These are synthetic transactions so real world transaction data may have other features to help determine fraudulent transactions from legitimate. 
 
 ## References
