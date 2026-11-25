@@ -15,6 +15,7 @@ editor:
   markdown: 
     wrap: 72
 ---
+## Introduction  
 ```{css}
 #title-slide .title {
   font-size: 1.6em;
@@ -32,8 +33,6 @@ fraud_df <- read_csv("synthetic_financial_transactions.csv") %>%
 fraud_data<- fraud_df %>% mutate(fraud_num = as.numeric(is_fraud == "Fraud"))
 ```
 
-
-## Introduction  
 
 -   Payment fraud is increasing with growing e-commerce and new payment methods.
 -   FedNow (July 2023): offers financial institutions to send and receive instant payments any time and every day.
@@ -86,7 +85,7 @@ SMOTE-NC handles both numeric and categorical variables. For categories it uses 
 ```
 
 ::: notes 
-A 0.5 threshold was not used due to its inablity to identify fraud because of the imbalance.
+A 0.5 threshold was not used due to its inability to identify fraud because of the imbalance.
 :::
 
 ## Methodology; Metrics
@@ -95,7 +94,14 @@ A 0.5 threshold was not used due to its inablity to identify fraud because of th
 -   AUC-PR - area under the precision-recall curve for all thresholds
 -   Random guessing gives AUC-PR of about 0.013, the fraud rate
 
-$$\text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}, \quad F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$$
+::: {style="font-size: 80%;"}
+$$
+\text{Precision} = \frac{TP}{TP + FP}, \quad
+\text{Recall} = \frac{TP}{TP + FN}, \quad
+F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}
+{\text{Precision} + \text{Recall}}
+$$
+:::
 
 
 
