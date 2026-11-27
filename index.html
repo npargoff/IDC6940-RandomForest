@@ -2437,7 +2437,7 @@ window.Quarto = {
 <section id="procedure" class="level3">
 <h3 class="anchored" data-anchor-id="procedure">Procedure</h3>
 <p>The models were evaluated using a stratified 5-fold cross-validation for 10 repeats. Each fold was trained on 80% of the data and tested on 20%. All four models used the same folds, so the differences in performance reflect the imbalance treatment and not the data split. Each model used the randomForest package with the default of 500 trees.</p>
-<p>A fixed threshold of 0.5 was not used because with the low fraud rate the models would rarely identify fraudulent transactions. The threshold was tuned for each model while the forest settings remained default. The models were trained on 75% of each training set and the other 25% was used to choose the threshold. The threshold that maximized F1 on the 25% was then applied to the test fold. SMOTE-NC with k = 5 and balanced 1:1 ratio was applied only to the 75% used for training. The procedure was run twice, once with the risk score and then without the risk score to test the models’ dependence on a single variable. The R scripts used for the analysis were with_risk_score.R and no_risk_score.R. The caret package was used for the stratified folds, themis for SMOTE-NC, and PRROC for AUC-PR.</p>
+<p>A fixed threshold of 0.5 was not used because with the low fraud rate the models would rarely identify fraudulent transactions. The threshold was tuned for each model while the forest settings remained default. The models were trained on 75% of each training set and the other 25% was used to choose the threshold (<a href="#tbl-split" class="quarto-xref">Table 1</a>). The threshold that maximized F1 on the 25% was then applied to the test fold. SMOTE-NC with k = 5 and balanced 1:1 ratio was applied only to the 75% used for training. The procedure was run twice, once with the risk score and then without the risk score to test the models’ dependence on a single variable. The R scripts used for the analysis were with_risk_score.R and no_risk_score.R. The caret package was used for the stratified folds, themis for SMOTE-NC, and PRROC for AUC-PR.</p>
 <div id="tbl-split" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-split-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -2586,20 +2586,20 @@ Table 2: Descriptive statistics by transaction class
 </figcaption>
 <div aria-describedby="tbl-descriptive-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
-<div id="pkgqyaruas" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#pkgqyaruas table {
+<div id="lqrtijjrkt" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#lqrtijjrkt table {
 font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 -webkit-font-smoothing: antialiased;
 -moz-osx-font-smoothing: grayscale;
 }
-#pkgqyaruas thead, #pkgqyaruas tbody, #pkgqyaruas tfoot, #pkgqyaruas tr, #pkgqyaruas td, #pkgqyaruas th {
+#lqrtijjrkt thead, #lqrtijjrkt tbody, #lqrtijjrkt tfoot, #lqrtijjrkt tr, #lqrtijjrkt td, #lqrtijjrkt th {
 border-style: none;
 }
-#pkgqyaruas p {
+#lqrtijjrkt p {
 margin: 0;
 padding: 0;
 }
-#pkgqyaruas .gt_table {
+#lqrtijjrkt .gt_table {
 display: table;
 border-collapse: collapse;
 line-height: normal;
@@ -2624,11 +2624,11 @@ border-left-style: none;
 border-left-width: 2px;
 border-left-color: #D3D3D3;
 }
-#pkgqyaruas .gt_caption {
+#lqrtijjrkt .gt_caption {
 padding-top: 4px;
 padding-bottom: 4px;
 }
-#pkgqyaruas .gt_title {
+#lqrtijjrkt .gt_title {
 color: #333333;
 font-size: 125%;
 font-weight: initial;
@@ -2639,7 +2639,7 @@ padding-right: 5px;
 border-bottom-color: #FFFFFF;
 border-bottom-width: 0;
 }
-#pkgqyaruas .gt_subtitle {
+#lqrtijjrkt .gt_subtitle {
 color: #333333;
 font-size: 85%;
 font-weight: initial;
@@ -2650,7 +2650,7 @@ padding-right: 5px;
 border-top-color: #FFFFFF;
 border-top-width: 0;
 }
-#pkgqyaruas .gt_heading {
+#lqrtijjrkt .gt_heading {
 background-color: #FFFFFF;
 text-align: center;
 border-bottom-color: #FFFFFF;
@@ -2661,12 +2661,12 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#pkgqyaruas .gt_bottom_border {
+#lqrtijjrkt .gt_bottom_border {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#pkgqyaruas .gt_col_headings {
+#lqrtijjrkt .gt_col_headings {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -2680,7 +2680,7 @@ border-right-style: none;
 border-right-width: 1px;
 border-right-color: #D3D3D3;
 }
-#pkgqyaruas .gt_col_heading {
+#lqrtijjrkt .gt_col_heading {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2699,7 +2699,7 @@ padding-left: 5px;
 padding-right: 5px;
 overflow-x: hidden;
 }
-#pkgqyaruas .gt_column_spanner_outer {
+#lqrtijjrkt .gt_column_spanner_outer {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2710,13 +2710,13 @@ padding-bottom: 0;
 padding-left: 4px;
 padding-right: 4px;
 }
-#pkgqyaruas .gt_column_spanner_outer:first-child {
+#lqrtijjrkt .gt_column_spanner_outer:first-child {
 padding-left: 0;
 }
-#pkgqyaruas .gt_column_spanner_outer:last-child {
+#lqrtijjrkt .gt_column_spanner_outer:last-child {
 padding-right: 0;
 }
-#pkgqyaruas .gt_column_spanner {
+#lqrtijjrkt .gt_column_spanner {
 border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
@@ -2727,10 +2727,10 @@ overflow-x: hidden;
 display: inline-block;
 width: 100%;
 }
-#pkgqyaruas .gt_spanner_row {
+#lqrtijjrkt .gt_spanner_row {
 border-bottom-style: hidden;
 }
-#pkgqyaruas .gt_group_heading {
+#lqrtijjrkt .gt_group_heading {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2755,7 +2755,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 text-align: left;
 }
-#pkgqyaruas .gt_empty_group_heading {
+#lqrtijjrkt .gt_empty_group_heading {
 padding: 0.5px;
 color: #333333;
 background-color: #FFFFFF;
@@ -2769,13 +2769,13 @@ border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 vertical-align: middle;
 }
-#pkgqyaruas .gt_from_md > :first-child {
+#lqrtijjrkt .gt_from_md > :first-child {
 margin-top: 0;
 }
-#pkgqyaruas .gt_from_md > :last-child {
+#lqrtijjrkt .gt_from_md > :last-child {
 margin-bottom: 0;
 }
-#pkgqyaruas .gt_row {
+#lqrtijjrkt .gt_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2793,7 +2793,7 @@ border-right-color: #D3D3D3;
 vertical-align: middle;
 overflow-x: hidden;
 }
-#pkgqyaruas .gt_stub {
+#lqrtijjrkt .gt_stub {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2805,7 +2805,7 @@ border-right-color: #D3D3D3;
 padding-left: 5px;
 padding-right: 5px;
 }
-#pkgqyaruas .gt_stub_row_group {
+#lqrtijjrkt .gt_stub_row_group {
 color: #333333;
 background-color: #FFFFFF;
 font-size: 100%;
@@ -2818,13 +2818,13 @@ padding-left: 5px;
 padding-right: 5px;
 vertical-align: top;
 }
-#pkgqyaruas .gt_row_group_first td {
+#lqrtijjrkt .gt_row_group_first td {
 border-top-width: 2px;
 }
-#pkgqyaruas .gt_row_group_first th {
+#lqrtijjrkt .gt_row_group_first th {
 border-top-width: 2px;
 }
-#pkgqyaruas .gt_summary_row {
+#lqrtijjrkt .gt_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2833,14 +2833,14 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#pkgqyaruas .gt_first_summary_row {
+#lqrtijjrkt .gt_first_summary_row {
 border-top-style: solid;
 border-top-color: #D3D3D3;
 }
-#pkgqyaruas .gt_first_summary_row.thick {
+#lqrtijjrkt .gt_first_summary_row.thick {
 border-top-width: 2px;
 }
-#pkgqyaruas .gt_last_summary_row {
+#lqrtijjrkt .gt_last_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2849,7 +2849,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#pkgqyaruas .gt_grand_summary_row {
+#lqrtijjrkt .gt_grand_summary_row {
 color: #333333;
 background-color: #FFFFFF;
 text-transform: inherit;
@@ -2858,7 +2858,7 @@ padding-bottom: 8px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#pkgqyaruas .gt_first_grand_summary_row {
+#lqrtijjrkt .gt_first_grand_summary_row {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2867,7 +2867,7 @@ border-top-style: double;
 border-top-width: 6px;
 border-top-color: #D3D3D3;
 }
-#pkgqyaruas .gt_last_grand_summary_row_top {
+#lqrtijjrkt .gt_last_grand_summary_row_top {
 padding-top: 8px;
 padding-bottom: 8px;
 padding-left: 5px;
@@ -2876,10 +2876,10 @@ border-bottom-style: double;
 border-bottom-width: 6px;
 border-bottom-color: #D3D3D3;
 }
-#pkgqyaruas .gt_striped {
+#lqrtijjrkt .gt_striped {
 background-color: rgba(128, 128, 128, 0.05);
 }
-#pkgqyaruas .gt_table_body {
+#lqrtijjrkt .gt_table_body {
 border-top-style: solid;
 border-top-width: 2px;
 border-top-color: #D3D3D3;
@@ -2887,7 +2887,7 @@ border-bottom-style: solid;
 border-bottom-width: 2px;
 border-bottom-color: #D3D3D3;
 }
-#pkgqyaruas .gt_footnotes {
+#lqrtijjrkt .gt_footnotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2900,7 +2900,7 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#pkgqyaruas .gt_footnote {
+#lqrtijjrkt .gt_footnote {
 margin: 0px;
 font-size: 90%;
 padding-top: 4px;
@@ -2908,7 +2908,7 @@ padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#pkgqyaruas .gt_sourcenotes {
+#lqrtijjrkt .gt_sourcenotes {
 color: #333333;
 background-color: #FFFFFF;
 border-bottom-style: none;
@@ -2921,64 +2921,64 @@ border-right-style: none;
 border-right-width: 2px;
 border-right-color: #D3D3D3;
 }
-#pkgqyaruas .gt_sourcenote {
+#lqrtijjrkt .gt_sourcenote {
 font-size: 90%;
 padding-top: 4px;
 padding-bottom: 4px;
 padding-left: 5px;
 padding-right: 5px;
 }
-#pkgqyaruas .gt_left {
+#lqrtijjrkt .gt_left {
 text-align: left;
 }
-#pkgqyaruas .gt_center {
+#lqrtijjrkt .gt_center {
 text-align: center;
 }
-#pkgqyaruas .gt_right {
+#lqrtijjrkt .gt_right {
 text-align: right;
 font-variant-numeric: tabular-nums;
 }
-#pkgqyaruas .gt_font_normal {
+#lqrtijjrkt .gt_font_normal {
 font-weight: normal;
 }
-#pkgqyaruas .gt_font_bold {
+#lqrtijjrkt .gt_font_bold {
 font-weight: bold;
 }
-#pkgqyaruas .gt_font_italic {
+#lqrtijjrkt .gt_font_italic {
 font-style: italic;
 }
-#pkgqyaruas .gt_super {
+#lqrtijjrkt .gt_super {
 font-size: 65%;
 }
-#pkgqyaruas .gt_footnote_marks {
+#lqrtijjrkt .gt_footnote_marks {
 font-size: 75%;
 vertical-align: 0.4em;
 position: initial;
 }
-#pkgqyaruas .gt_asterisk {
+#lqrtijjrkt .gt_asterisk {
 font-size: 100%;
 vertical-align: 0;
 }
-#pkgqyaruas .gt_indent_1 {
+#lqrtijjrkt .gt_indent_1 {
 text-indent: 5px;
 }
-#pkgqyaruas .gt_indent_2 {
+#lqrtijjrkt .gt_indent_2 {
 text-indent: 10px;
 }
-#pkgqyaruas .gt_indent_3 {
+#lqrtijjrkt .gt_indent_3 {
 text-indent: 15px;
 }
-#pkgqyaruas .gt_indent_4 {
+#lqrtijjrkt .gt_indent_4 {
 text-indent: 20px;
 }
-#pkgqyaruas .gt_indent_5 {
+#lqrtijjrkt .gt_indent_5 {
 text-indent: 25px;
 }
-#pkgqyaruas .katex-display {
+#lqrtijjrkt .katex-display {
 display: inline-flex !important;
 margin-bottom: 0.75em !important;
 }
-#pkgqyaruas div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#lqrtijjrkt div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
 height: 0px !important;
 }
 </style>
@@ -3541,7 +3541,7 @@ Table 5: Average performance on the fraud class across 50 test folds, risk scor
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>This study compared different Random Forest models for fraud detection with a dataset that contained 1.26% fraudulent transactions. With the risk score included Balanced RF and Baseline RF had the highest AUC-PR of 0.089 and 0.084 respectively. The AUC-PR for all models barely surpassed random guessing without the risk score.</p>
 <p>A regular Random Forest with a good cutoff was as good as some of the more complex models. In this particular comparison adding a treatment resulted in SMOTE-NC performing worse than Baseline. This resulted in SMOTE-NC having about 8 times as many false positives when compared to Baseline. This is likely due to the creation of additional synthetic fraudulent transactions that look similar to legitimate transactions resulting in more legitimate transactions being flagged. Data in this dataset is the limiting factor when it comes to a model’s performance and with this particular study the risk score was the primary indicator of a fraudulent transaction.</p>
-<p>The models depended on the derived risk score as a primary means to identify fraudulent transactions and this particular dataset did not document how that score was derived possibly causing data leakage. The dataset had a severe imbalance with 126 fraudulent transactions making the sample about 25 fraudulent transactions per test fold. These are synthetic transactions so real world transaction data may have other features to help determine fraudulent transactions from legitimate.</p>
+<p>The models depended on the derived risk score as a primary means to identify fraudulent transactions. This dataset did not document how that score was derived possibly causing data leakage. The dataset had a severe imbalance with 126 fraudulent transactions making the sample about 25 fraudulent transactions per test fold. These are synthetic transactions so real world transaction data may have other features to help determine fraudulent transactions from legitimate.</p>
 </section>
 <section id="references" class="level2 unnumbered">
 

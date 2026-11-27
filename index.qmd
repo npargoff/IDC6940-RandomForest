@@ -181,7 +181,7 @@ reflect the imbalance treatment and not the data split. Each model used
 the randomForest package with the default of 500 trees.
 
 A fixed threshold of 0.5 was not used because with the low fraud rate
-the models would rarely identify fraudulent transactions. The threshold was tuned for each model while the forest settings remained default. The models were trained on 75% of each training set and the other 25% was used to choose the threshold. The threshold that maximized F1 on the 25% was
+the models would rarely identify fraudulent transactions. The threshold was tuned for each model while the forest settings remained default. The models were trained on 75% of each training set and the other 25% was used to choose the threshold (@tbl-split). The threshold that maximized F1 on the 25% was
 then applied to the test fold. SMOTE-NC with k = 5 and balanced 1:1 ratio was applied only to the 75% used
 for training. The procedure was run twice, once with the risk score and
 then without the risk score to test the models' dependence on a single
@@ -488,7 +488,7 @@ model's performance and with this particular study the risk score was
 the primary indicator of a fraudulent transaction.
 
 The models depended on the derived risk score as a primary means to
-identify fraudulent transactions and this particular dataset did not
+identify fraudulent transactions. This dataset did not
 document how that score was derived possibly causing data leakage. The
 dataset had a severe imbalance with 126 fraudulent transactions
 making the sample about 25 fraudulent transactions per test fold. These
