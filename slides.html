@@ -442,7 +442,7 @@
   <meta name="generator" content="quarto-1.9.37">
 
   <meta name="author" content="Nicholas Pargoff and Andrew Mattson (Advisor: Dr. Cohen)">
-  <meta name="dcterms.date" content="2026-11-22">
+  <meta name="dcterms.date" content="2026-11-27">
   <title>Comparing Random Forest Approaches to Class-Imbalanced Payment Fraud Detection</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -998,10 +998,10 @@ Nicholas Pargoff and Andrew Mattson (Advisor: Dr. Cohen)
 </div>
 </div>
 
-  <p class="date">2026-11-22</p>
+  <p class="date">2026-11-27</p>
 </section>
-<section class="slide level2">
-
+<section id="introduction" class="slide level2">
+<h2>Introduction</h2>
 <div class="cell">
 <style type="text/css">
 #title-slide .title {
@@ -1009,9 +1009,6 @@ font-size: 1.6em;
 }
 </style>
 </div>
-</section>
-<section id="introduction" class="slide level2">
-<h2>Introduction</h2>
 <ul>
 <li>Payment fraud is increasing with growing e-commerce and new payment methods.</li>
 <li>FedNow (July 2023): offers financial institutions to send and receive instant payments any time and every day.</li>
@@ -1084,20 +1081,46 @@ overflow: hidden!important;
 display:block!important;
 }</style></aside>
 </section>
-<section id="methodology-procedure" class="slide level2">
+<section id="methodology-procedure" class="slide level2 smaller">
 <h2>Methodology: Procedure</h2>
 <ul>
 <li>5-fold cross validation for 10 repeats (50 test folds).</li>
 <li>All four models used the same folds and 500 trees (randomForest package).</li>
 <li>Everything was run with and without the risk score.</li>
 </ul>
-<pre><code>10,000 transactions
-├── Test fold (20%): grades the model
-└── Training (80%)
-    ├── 75%: trains the model (SMOTE-NC applied here only)
-    └── 25%: picks the threshold with the best F1</code></pre>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Part</th>
+<th>Share of all data</th>
+<th>Used for</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Model fitting</td>
+<td>60% (75% of the training set)</td>
+<td>Fitting the model; SMOTE-NC applied here only</td>
+</tr>
+<tr class="even">
+<td>Threshold selection</td>
+<td>20% (25% of the training set)</td>
+<td>Choosing the threshold that maximizes F1</td>
+</tr>
+<tr class="odd">
+<td>Test fold</td>
+<td>20%</td>
+<td>Scoring the model once</td>
+</tr>
+</tbody>
+</table>
 <aside class="notes">
-<p>A 0.5 threshold was not used due to its inablity to identify fraud because of the imbalance.</p>
+<p>A 0.5 threshold was not used due to its inability to identify fraud because of the imbalance.</p>
 <style type="text/css">
 span.MJX_Assistive_MathML {
 position:absolute!important;
@@ -1111,13 +1134,20 @@ display:block!important;
 }</style></aside>
 </section>
 <section id="methodology-metrics" class="slide level2">
-<h2>Methodology; Metrics</h2>
+<h2>Methodology: Metrics</h2>
 <ul>
 <li>All metrics are for the fraud class</li>
 <li>AUC-PR - area under the precision-recall curve for all thresholds</li>
-<li>Random guessing gives AUC-PR of about 0.013, the fraud rate</li>
+<li>Random guessing gives AUC-PR of about 0.013</li>
 </ul>
-<p><span class="math display">\[\text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}, \quad F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}\]</span></p>
+<div style="font-size: 70%;">
+<p><span class="math display">\[
+\text{Precision} = \frac{TP}{TP + FP}, \quad
+\text{Recall} = \frac{TP}{TP + FN}, \quad
+F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}
+{\text{Precision} + \text{Recall}}
+\]</span></p>
+</div>
 </section>
 <section id="data-exploration-and-visualizations" class="slide level2">
 <h2>Data Exploration and Visualizations</h2>
@@ -1195,8 +1225,8 @@ display:block!important;
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th style="text-align: left;">method</th>
-<th style="text-align: right;">AUC_PR</th>
+<th style="text-align: left;">Method</th>
+<th style="text-align: right;">AUC-PR</th>
 <th style="text-align: right;">Precision</th>
 <th style="text-align: right;">Recall</th>
 <th style="text-align: right;">F1</th>
@@ -1204,14 +1234,14 @@ display:block!important;
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">balanced</td>
+<td style="text-align: left;">Balanced RF</td>
 <td style="text-align: right;">0.089</td>
 <td style="text-align: right;">0.235</td>
 <td style="text-align: right;">0.189</td>
 <td style="text-align: right;">0.203</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">baseline</td>
+<td style="text-align: left;">Baseline RF</td>
 <td style="text-align: right;">0.084</td>
 <td style="text-align: right;">0.204</td>
 <td style="text-align: right;">0.180</td>
@@ -1225,7 +1255,7 @@ display:block!important;
 <td style="text-align: right;">0.028</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">weighted</td>
+<td style="text-align: left;">Class weighting</td>
 <td style="text-align: right;">0.033</td>
 <td style="text-align: right;">0.053</td>
 <td style="text-align: right;">0.064</td>
@@ -1260,21 +1290,21 @@ display:block!important;
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th style="text-align: left;">method</th>
+<th style="text-align: left;">Method</th>
 <th style="text-align: right;">Caught</th>
 <th style="text-align: right;">Missed</th>
-<th style="text-align: right;">False_alarms</th>
+<th style="text-align: right;">False alarms</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">balanced</td>
+<td style="text-align: left;">Balanced RF</td>
 <td style="text-align: right;">24</td>
 <td style="text-align: right;">102</td>
 <td style="text-align: right;">77</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">baseline</td>
+<td style="text-align: left;">Baseline RF</td>
 <td style="text-align: right;">23</td>
 <td style="text-align: right;">103</td>
 <td style="text-align: right;">88</td>
@@ -1286,7 +1316,7 @@ display:block!important;
 <td style="text-align: right;">678</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">weighted</td>
+<td style="text-align: left;">Class weighting</td>
 <td style="text-align: right;">8</td>
 <td style="text-align: right;">118</td>
 <td style="text-align: right;">212</td>
@@ -1320,8 +1350,8 @@ display:block!important;
 <table class="caption-top">
 <thead>
 <tr class="header">
-<th style="text-align: left;">method</th>
-<th style="text-align: right;">AUC_PR</th>
+<th style="text-align: left;">Method</th>
+<th style="text-align: right;">AUC-PR</th>
 <th style="text-align: right;">Precision</th>
 <th style="text-align: right;">Recall</th>
 <th style="text-align: right;">F1</th>
@@ -1329,14 +1359,14 @@ display:block!important;
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">balanced</td>
+<td style="text-align: left;">Balanced RF</td>
 <td style="text-align: right;">0.014</td>
 <td style="text-align: right;">0.009</td>
 <td style="text-align: right;">0.189</td>
 <td style="text-align: right;">0.015</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">baseline</td>
+<td style="text-align: left;">Baseline RF</td>
 <td style="text-align: right;">0.015</td>
 <td style="text-align: right;">0.017</td>
 <td style="text-align: right;">0.205</td>
@@ -1350,7 +1380,7 @@ display:block!important;
 <td style="text-align: right;">0.023</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">weighted</td>
+<td style="text-align: left;">Class weighting</td>
 <td style="text-align: right;">0.018</td>
 <td style="text-align: right;">0.015</td>
 <td style="text-align: right;">0.138</td>
@@ -1362,7 +1392,8 @@ display:block!important;
 </div>
 <ul>
 <li>All four models’ AUC-PR and F1 dropped</li>
-<li>AUC-PR of 0.013 to 0.018 is about the same as random guessing</li>
+<li>AUC-PR of 0.013 to 0.018 is about the same as random guessing (0.013)</li>
+<li>Recall increased because the models flagged more legitimate transactions</li>
 <li>The models relied on the risk score</li>
 </ul>
 <aside class="notes">

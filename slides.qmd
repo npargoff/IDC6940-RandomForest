@@ -15,6 +15,7 @@ editor:
   markdown: 
     wrap: 72
 ---
+## Introduction  
 ```{css}
 #title-slide .title {
   font-size: 1.6em;
@@ -32,8 +33,6 @@ fraud_df <- read_csv("synthetic_financial_transactions.csv") %>%
 fraud_data<- fraud_df %>% mutate(fraud_num = as.numeric(is_fraud == "Fraud"))
 ```
 
-
-## Introduction  
 
 -   Payment fraud is increasing with growing e-commerce and new payment methods.
 -   FedNow (July 2023): offers financial institutions to send and receive instant payments any time and every day.
@@ -72,32 +71,36 @@ This study only changed the treatment but kept the models the same
 SMOTE-NC handles both numeric and categorical variables. For categories it uses the most common category among the neighbors.
 :::
 
-## Methodology: Procedure
+## Methodology: Procedure {.smaller}
 -   5-fold cross validation for 10 repeats (50 test folds).
 -   All four models used the same folds and 500 trees (randomForest package).
 -   Everything was run with and without the risk score.
 
-```
-10,000 transactions
-├── Test fold (20%): grades the model
-└── Training (80%)
-    ├── 75%: trains the model (SMOTE-NC applied here only)
-    └── 25%: picks the threshold with the best F1
-```
+| Part | Share of all data | Used for |
+|---|---|---|
+| Model fitting | 60% (75% of the training set) | Fitting the model; SMOTE-NC applied here only |
+| Threshold selection | 20% (25% of the training set) | Choosing the threshold that maximizes F1 |
+| Test fold | 20% | Scoring the model once |
+
 
 ::: notes 
-A 0.5 threshold was not used due to its inablity to identify fraud because of the imbalance.
+A 0.5 threshold was not used due to its inability to identify fraud because of the imbalance.
 :::
 
-## Methodology; Metrics
+## Methodology: Metrics
 
 -   All metrics are for the fraud class
 -   AUC-PR - area under the precision-recall curve for all thresholds
--   Random guessing gives AUC-PR of about 0.013, the fraud rate
+-   Random guessing gives AUC-PR of about 0.013
 
-$$\text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}, \quad F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}$$
-
-
+::: {style="font-size: 70%;"}
+$$
+\text{Precision} = \frac{TP}{TP + FP}, \quad
+\text{Recall} = \frac{TP}{TP + FN}, \quad
+F_1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}
+{\text{Precision} + \text{Recall}}
+$$
+:::
 
 ## Data Exploration and Visualizations 
 :::: {.columns}
@@ -163,13 +166,18 @@ Amount, account type, category, payment method, and device type showed no signif
 
 ```{r}
 read.csv("cv_results_with_risk.csv") %>%
-  group_by(method) %>%
+ group_by(method) %>%
   summarise(AUC_PR    = mean(aucpr),
             Precision = mean(precision, na.rm = TRUE),
             Recall    = mean(recall),
             F1        = mean(f1)) %>%
-  mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
-  knitr::kable(digits = 3)
+    mutate(method = recode(method, 
+                           "baseline" = "Baseline RF",
+                           "balanced" = "Balanced RF",
+                           "smote" = "SMOTE-NC",
+                           "weighted" = "Class weighting")) %>%
+  knitr::kable(digits = 3,
+               col.names = c("Method", "AUC-PR", "Precision", "Recall", "F1"))
 ```
 
 - Balanced RF (0.089) and Baseline (0.084) performed about the same
@@ -183,12 +191,17 @@ Averages across 50 test folds.
 
 ```{r}
 read.csv("cv_results_with_risk.csv") %>%
-  group_by(method) %>%
+   group_by(method) %>%
   summarise(Caught       = sum(tp) / 10,
             Missed       = sum(fn) / 10,
             False_alarms = sum(fp) / 10) %>%
-  mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
-  knitr::kable(digits = 0)
+        mutate(method = recode(method, 
+                           "baseline" = "Baseline RF",
+                           "balanced" = "Balanced RF",
+                           "smote" = "SMOTE-NC",
+                           "weighted" = "Class weighting")) %>%
+  knitr::kable(digits = 0,
+               col.names = c("Method", "Caught", "Missed", "False alarms"))
 ```
 
 - SMOTE-NC caught 14 fraud cases with 678 false alarms
@@ -207,16 +220,23 @@ read.csv("cv_results_no_risk.csv") %>%
             Precision = mean(precision, na.rm = TRUE),
             Recall    = mean(recall),
             F1        = mean(f1)) %>%
-  mutate(method = recode(method, "smote" = "SMOTE-NC")) %>%
-  knitr::kable(digits = 3)
+    mutate(method = recode(method, 
+                           "baseline" = "Baseline RF",
+                           "balanced" = "Balanced RF",
+                           "smote" = "SMOTE-NC",
+                           "weighted" = "Class weighting")) %>%
+  knitr::kable(digits = 3,
+               col.names = c("Method", "AUC-PR", "Precision", "Recall", "F1"))
 ```
 
 - All four models' AUC-PR and F1 dropped
-- AUC-PR of 0.013 to 0.018 is about the same as random guessing
+- AUC-PR of 0.013 to 0.018 is about the same as random guessing (0.013)
+- Recall increased because the models flagged more legitimate transactions
 - The models relied on the risk score
 
+
 ::: notes
-SMOTE-NC's recall went up, but its AUC-PR and F1 still dropped.
+SMOTE-NC's recall went up, but its AUC-PR and F1 still dropped. 
 :::
 
 ## Conclusion
